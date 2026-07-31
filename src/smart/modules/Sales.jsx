@@ -552,7 +552,7 @@ export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, 
               : `${summary.count} ${tab} · TZS ${money(summary.sum)}k combined value`}
           </p>
         </div>
-        {tab !== "subscriptions" && (
+        {tab !== "subscriptions" && (<>
           <button
             onClick={() => setShowForm(true)}
             className="btn-primary text-white text-[13px] font-medium px-3.5 py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-sm transition-colors shrink-0"
@@ -560,7 +560,7 @@ export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, 
             <Plus size={15} /> New {tab === "quotations" ? "Quotation" : tab === "orders" ? "Order" : "Invoice"}
           </button>
           <button onClick={() => downloadCSV("sales-" + tab, filtered, [{key:"id",label:"ID"},{key:"customer",label:"Customer"},{key:"date",label:"Date"},{key:"status",label:"Status"}])} className="flex items-center gap-1 text-[12.5px] font-medium text-slate-500 border border-slate-200 px-3 py-2 rounded-lg hover:border-[#16A34A] hover:text-[#16A34A] transition-colors"><Download size={13}/>CSV</button>
-        )}
+        </>)}
       </div>
 
       <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto w-fit max-w-full">
