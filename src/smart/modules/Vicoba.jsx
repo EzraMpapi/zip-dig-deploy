@@ -220,6 +220,7 @@ export function VicobaSaccosModule({ currentUser }) {
               })()}
             </div>
         </div>
+        </div>
       )}
 
       {/* Members */}
