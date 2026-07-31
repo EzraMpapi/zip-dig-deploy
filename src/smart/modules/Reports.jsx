@@ -992,6 +992,7 @@ export function CashFlowReport({ invoices, expenses, posTransactions, company })
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
