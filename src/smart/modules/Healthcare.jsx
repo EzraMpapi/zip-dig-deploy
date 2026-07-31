@@ -2,8 +2,7 @@ import { useState } from "react";
 import {
   Activity, AlertCircle, CalendarCheck, CheckCircle2, ClipboardCheck, Download, Edit2, Eye,
   FileText, FlaskConical, HeartPulse, LayoutDashboard, Package, Pill, Plus, Printer, Receipt,
-  ScanLine, Stethoscope, UserPlus, Users, X
-} from "lucide-react";
+  ScanLine, Stethoscope, UserPlus, Users, X, Book, Brain, Check, Computer, Edit, Heart, History, Library, Phone, Route, Save, Scan, Type, View, Weight} from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

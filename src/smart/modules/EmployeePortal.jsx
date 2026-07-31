@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AtSign, Banknote, Bell, CalendarCheck, ClipboardList, Clock, Fingerprint, GraduationCap,
   History, LayoutDashboard, LogIn, LogOut, MessageCircle, PhoneCall, Plus, Printer, Receipt,
-  Search, Send, UserCircle, Users
-} from "lucide-react";
+  Search, Send, UserCircle, Users, Check, Code, Download, Fuel, Library, Phone, Store, Sun, Type, Verified} from "lucide-react";
 import { inputClass } from "../components/ui.jsx";
 import { attendanceSeed, trainingSeed } from "../data/hr.jsx";
 import { logAudit } from "../lib/buses.jsx";

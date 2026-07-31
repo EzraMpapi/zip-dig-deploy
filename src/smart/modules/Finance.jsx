@@ -3,8 +3,7 @@ import {
   AlertCircle, Banknote, BookOpen, CheckCircle2, ChevronRight, CircleDollarSign,
   ClipboardList, Clock, Download, FileText, Landmark, LayoutDashboard, Mail, MessageCircle,
   Package, Percent, Plus, Printer, ScanText, Search, Smartphone, Target, TrendingDown,
-  UploadCloud, UserPlus, Wallet, X, Zap
-} from "lucide-react";
+  UploadCloud, UserPlus, Wallet, X, Zap, Book, Building, Code, CreditCard, Delete, Edit, Phone, Ratio, Receipt, Save, Scan, Sheet, TrendingUp, Truck, Type, Upload, User} from "lucide-react";
 import {
   Area, AreaChart, Bar, CartesianGrid, Cell, ComposedChart, Line, PolarAngleAxis, PolarGrid,
   Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis

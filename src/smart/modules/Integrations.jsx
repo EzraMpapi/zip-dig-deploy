@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
-  Globe, Landmark, MessageCircle, PenTool, Percent, QrCode, Send, Smartphone
-} from "lucide-react";
+  Globe, Landmark, MessageCircle, PenTool, Percent, QrCode, Send, Smartphone, Barcode, Link, Lock, Slack} from "lucide-react";
 import { ESignature, QRBarcodeTools } from "../components/tools.jsx";
 import { inputClass } from "../components/ui.jsx";
 import { INTEGRATION_CONNECTIONS } from "../data/integrations.jsx";

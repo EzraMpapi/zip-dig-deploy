@@ -3,8 +3,7 @@ import {
   AlertCircle, BarChart2, BarChart3, CheckCircle2, ChevronRight, CircleDollarSign,
   CircleUserRound, ClipboardList, Crosshair, Factory, FileText, Gauge, GitBranch, Globe,
   Grid3x3, HandCoins, Landmark, LayoutDashboard, Lock, Package, Plus, Receipt, ShieldCheck,
-  Sparkles, Tag, Target, Trash2, TrendingUp, UserPlus, Users, Wallet, X
-} from "lucide-react";
+  Sparkles, Tag, Target, Trash2, TrendingUp, UserPlus, Users, Wallet, X, Banknote, Book, BookOpen, Brain, Building, Check, Command, Construction, Delete, Group, Kanban, LineChart, LoaderCircle, Navigation, Palette, Percent, Phone, Save, School, Settings, ShoppingCart, Store, Sun, Truck, Type, View, Warehouse} from "lucide-react";
 import {
   Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart,
   PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis

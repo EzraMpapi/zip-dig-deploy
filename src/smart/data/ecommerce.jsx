@@ -1,3 +1,4 @@
+import { Construction, Sun, Warehouse } from "lucide-react";
 import { inventorySeed } from "../data/inventory.jsx";
 
 /* ══════════════ E-COMMERCE DATA ══════════════ */

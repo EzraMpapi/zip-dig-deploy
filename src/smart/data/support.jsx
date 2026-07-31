@@ -1,3 +1,4 @@
+import { Construction, Contact, Group } from "lucide-react";
 /* ══════════════ CUSTOMER SUPPORT DATA ══════════════ */
 /* ----------------------------- CUSTOMER SUPPORT DATA ---------------------------- */
 export const TICKET_STATUS_COLOR = { Open: "#EF4444", "In Progress": "#F59E0B", Resolved: "#16A34A", Closed: "#9CA3AF" };

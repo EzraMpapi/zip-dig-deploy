@@ -1,3 +1,4 @@
+import { Receipt, Settings } from "lucide-react";
 import { IS_CONFIGURED, sb } from "../lib/supabase.jsx";
 
 export const toastBus = {

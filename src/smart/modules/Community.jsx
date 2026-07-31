@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
-  BarChart3, CircleDollarSign, Heart, Plus, Users
-} from "lucide-react";
+  BarChart3, CircleDollarSign, Heart, Plus, Users, Check, Church, Club, Group, Hospital, Monitor, Save, Share, Table, Type} from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

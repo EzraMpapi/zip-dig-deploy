@@ -1,6 +1,5 @@
 import {
-  FileCheck, FileText, Hash, Mail, Video
-} from "lucide-react";
+  FileCheck, FileText, Hash, Mail, Video, Route, Slack, Watch, Workflow} from "lucide-react";
 import { TODAY, money } from "../lib/format.jsx";
 
 /* ══════════════ WORKFLOW AUTOMATION STUDIO DATA ══════════════ */

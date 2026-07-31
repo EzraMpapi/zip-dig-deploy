@@ -1,8 +1,7 @@
 import { useState } from "react";
 import {
   BarChart3, Bed, CalendarDays, Check, CheckCircle, CircleDollarSign, Download, Hotel,
-  LayoutDashboard, Printer, Sparkles, UserCheck, X
-} from "lucide-react";
+  LayoutDashboard, Printer, Sparkles, UserCheck, X, Phone, Type} from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

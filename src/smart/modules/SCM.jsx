@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  CheckCircle2, ChevronRight, ClipboardList, Clock, Plus, Search, Truck, X
-} from "lucide-react";
+  CheckCircle2, ChevronRight, ClipboardList, Clock, Plus, Search, Truck, X, Delete, Route} from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

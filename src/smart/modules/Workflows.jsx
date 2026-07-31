@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import {
-  AlertCircle, CheckCircle2, GitBranch, Plus, Store, Trash2, X
-} from "lucide-react";
+  AlertCircle, CheckCircle2, GitBranch, Plus, Store, Trash2, X, Circle, Delete, Edit, Kanban, Palette, Save, Workflow} from "lucide-react";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import { NOTIFICATION_CHANNELS } from "../data/notifications.jsx";
 import {

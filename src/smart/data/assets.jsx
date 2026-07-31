@@ -1,3 +1,4 @@
+import { Building, Construction, Forklift, Group, Server, Truck, Warehouse } from "lucide-react";
 import { TODAY } from "../lib/format.jsx";
 
 /* ══════════════ FIXED ASSETS ══════════════ */

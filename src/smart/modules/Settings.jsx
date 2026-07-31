@@ -3,8 +3,7 @@ import {
   AlertCircle, Banknote, BookOpen, Building2, CheckCircle2, Clock, Cog, Download, FileCheck,
   Fingerprint, Globe, HardHat, HeartPulse, ImageIcon, Info, Landmark, Layers, Lock, Mail,
   MapPin, Package, Palette, Phone, PhoneCall, Plus, Printer, Save, ShieldCheck, Sparkles,
-  Store, Trash2, Truck, Upload, UserPlus, Users, Wallet
-} from "lucide-react";
+  Store, Trash2, Truck, Upload, UserPlus, Users, Wallet, Award, Building, Car, Church, Code, Construction, Contact, Currency, Database, Delete, Edit, Facebook, Fuel, Group, Hand, Hospital, Hotel, Instagram, Merge, Network, Receipt, Scale, School, Send, Settings, Stamp, Text, Twitter, Type, Verified, Warehouse, X} from "lucide-react";
 import * as XLSX from "xlsx";
 import { EmptyState, FormField, SkeletonRows, inputClass } from "../components/ui.jsx";
 import { MODULES, ROLES } from "../data/core.jsx";

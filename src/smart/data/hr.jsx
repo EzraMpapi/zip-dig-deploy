@@ -1,3 +1,4 @@
+import { Warehouse } from "lucide-react";
 /* ══════════════ HR DATA ══════════════ */
 /* ---------------------------------- HR DATA ---------------------------------- */
 export const DEPARTMENTS = ["Sales", "Operations", "Finance", "Warehouse", "Admin"];

@@ -1,3 +1,4 @@
+import { Construction, Warehouse } from "lucide-react";
 import { TODAY, generateBarcode } from "../lib/format.jsx";
 
 /* ══════════════ INVENTORY DATA ══════════════ */

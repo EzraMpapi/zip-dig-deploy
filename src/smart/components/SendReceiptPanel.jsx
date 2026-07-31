@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Printer, X
-} from "lucide-react";
+  Printer, X, Download, Warehouse} from "lucide-react";
 import { TODAY, lineTotal } from "../lib/format.jsx";
 import { notify } from "../lib/notify.jsx";
 

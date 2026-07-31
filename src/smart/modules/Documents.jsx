@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Brain, Eye, FileText, Folder, FolderOpen, Grid3x3, History, List, LoaderCircle, PenTool,
-  ScanText, Search, Tag, UploadCloud, Users, X
-} from "lucide-react";
+  ScanText, Search, Tag, UploadCloud, Users, X, Delete, File, Files, Grid, Save, Scan, Text, Type, Upload} from "lucide-react";
 import { ConfirmDeleteButton, EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import { DOC_FOLDERS, FILE_TYPE_STYLE, runOCR } from "../data/documents.jsx";
 import { signaturesSeed } from "../data/integrations.jsx";

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2, Fingerprint, LoaderCircle, Lock, Package, Plus, Search, Trash2, UploadCloud,
-  Users, X
-} from "lucide-react";
+  Users, X, Accessibility, Chrome, Contact, Delete, File, Import, Phone, Rows, Settings, Shell, Sidebar, Table, Text, Unlock, Upload} from "lucide-react";
 import * as XLSX from "xlsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { COMPANY_CATEGORIES } from "../data/core.jsx";

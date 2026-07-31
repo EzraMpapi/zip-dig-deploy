@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpDown, CheckCircle2, CircleDollarSign, Minus, Package, Percent, Plus, Printer,
-  Receipt, Search, ShoppingBag, Smartphone, X
-} from "lucide-react";
+  Receipt, Search, ShoppingBag, Smartphone, X, Banknote, CreditCard, History, Settings} from "lucide-react";
 import {
   Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";

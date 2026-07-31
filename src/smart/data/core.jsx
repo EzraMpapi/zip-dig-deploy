@@ -3,8 +3,7 @@ import {
   Activity, BarChart3, Bell, Brain, Briefcase, Bus, ClipboardCheck, Factory, FileText, Gauge,
   GitBranch, Globe, HandCoins, Headphones, HeartPulse, Hotel, Kanban, Landmark,
   LayoutDashboard, Megaphone, MessageSquare, Package, School, ShoppingBag, ShoppingCart,
-  Store, Tablets, TreePine, Truck, UserCircle, Users, Users2, UtensilsCrossed, Wallet, X
-} from "lucide-react";
+  Store, Tablets, TreePine, Truck, UserCircle, Users, Users2, UtensilsCrossed, Wallet, X, Building, Cable, Calendar, Check, Computer, Construction, Cross, Gift, Group, Home, Music, Settings, Utensils, View, Warehouse, Workflow} from "lucide-react";
 import { money } from "../lib/format.jsx";
 
 /* ══════════════ DATA ══════════════ */

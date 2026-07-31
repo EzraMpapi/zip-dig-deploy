@@ -1,6 +1,5 @@
 import {
-  ClipboardList, FileText, ReceiptText
-} from "lucide-react";
+  ClipboardList, FileText, ReceiptText, Group, Plus} from "lucide-react";
 import { logAudit, receiptBus } from "../lib/buses.jsx";
 import { lineTotal, money } from "../lib/format.jsx";
 import { notify } from "../lib/notify.jsx";

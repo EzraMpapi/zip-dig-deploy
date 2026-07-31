@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle, Award, Banknote, Briefcase, CalendarCheck, CalendarDays, ChevronLeft,
   ChevronRight, CircleDollarSign, Clock, Download, Fingerprint, GraduationCap,
-  HeartHandshake, Mail, Phone, Plus, Printer, QrCode, Search, UserPlus, Users, X
-} from "lucide-react";
+  HeartHandshake, Mail, Phone, Plus, Printer, QrCode, Search, UserPlus, Users, X, AreaChart, Box, Code, Copy, Expand, Filter, Grid, Key, Lock, Save, Server, Share, Star, Store, Table, Type, Verified, View, Warehouse} from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

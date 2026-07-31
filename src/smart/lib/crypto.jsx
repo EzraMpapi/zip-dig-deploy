@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 /* ══════════════ BIOMETRIC ATTENDANCE (WebAuthn) ══════════════ */
 export function bufToB64(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));

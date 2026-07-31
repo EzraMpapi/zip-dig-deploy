@@ -3,8 +3,7 @@ import {
   BarChart3, Brain, Briefcase, CheckCircle2, ChevronRight, Circle, CircleDollarSign, Clock,
   CreditCard, Factory, FileText, Headphones, Landmark, LayoutDashboard, Megaphone,
   MessageCircle, Package, ReceiptText, ScanLine, ShoppingBag, Sparkles, Store, TrendingDown,
-  UserCheck, UserCircle, UserPlus, Users, Wallet, X
-} from "lucide-react";
+  UserCheck, UserCircle, UserPlus, Users, Wallet, X, Activity, Command, FolderKanban, Lock, Send, TrendingUp, View} from "lucide-react";
 import {
   Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis

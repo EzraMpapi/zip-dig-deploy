@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle, Ban, Bell, Building2, CheckCircle2, ClipboardList, Clock, Factory, Landmark,
-  LogOut, Package, ReceiptText, Repeat, Search, Wallet, Zap
-} from "lucide-react";
+  LogOut, Package, ReceiptText, Repeat, Search, Wallet, Zap, ArrowDown, ArrowUp, Code, Settings, View} from "lucide-react";
 import { TODAY, lineTotal, money } from "../lib/format.jsx";
 
 /* ══════════════ AI ASSISTANT ══════════════ */
