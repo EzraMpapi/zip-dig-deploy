@@ -370,5 +370,7 @@ export function NotificationLog({ log }) {
         </table>
       </div>
     </div>
+    </>
   );
+
 }
