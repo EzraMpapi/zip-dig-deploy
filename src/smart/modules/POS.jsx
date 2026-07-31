@@ -809,8 +809,7 @@ export function RegisterHistory({ transactions, inventory, company }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-[13px] min-w-[680px]">
           <thead>
             <tr className="border-b border-slate-100 text-left text-[11px] text-slate-400 uppercase tracking-wide">
