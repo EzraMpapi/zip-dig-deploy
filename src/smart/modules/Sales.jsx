@@ -793,9 +793,6 @@ export function DocPanel({ doc, onClose, onAdvance, onDelete, onRecordPayment, o
     setPayRef("");
     setShowPayLink(false);
     notify("Payment recorded · Ref: " + ref);
-  });
-    setPayOpen(false);
-    setPayAmount("");
   }
 
   return (
