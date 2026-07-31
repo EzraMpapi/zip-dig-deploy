@@ -1045,8 +1045,8 @@ export function ProjectBudget({ project, expensesHook, financeExpensesHook }) {
         </div>
       </div>
 
-      {showForm && <ProjectExpenseFormPanel onClose={() => setShowForm(false)} onSubmit={logEx
-pense} />}
+      {showForm && <ProjectExpenseFormPanel onClose={() => setShowForm(false)} onSubmit={logExpense} />}
+
     </div>
   );
 }
