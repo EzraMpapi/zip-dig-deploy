@@ -19,6 +19,15 @@
  */
 
 @theme inline {
+  /* SMART MANAGER brand system (ported from the app's tailwind config). */
+  --font-sans: Inter, system-ui, sans-serif;
+  --color-brand: #16a34a;
+  --color-brand-light: #22c55e;
+  --color-brand-mint: #dcfce7;
+  --color-brand-surface: #f8fafc;
+  --color-brand-line: #e5e7eb;
+  --color-brand-ink: #111827;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
