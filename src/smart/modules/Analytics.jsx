@@ -725,7 +725,7 @@ export function MicrofinanceModule({ currentUser }) {
                         </div>
                       ))}
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-2">PAR > 30: <strong className="text-[#EF4444]">{PAR30_ratio}%</strong></p>
+                    <p className="text-[11px] text-slate-400 mt-2">PAR &gt; 30: <strong className="text-[#EF4444]">{PAR30_ratio}%</strong></p>
                   </div>
                 );
               })()}
