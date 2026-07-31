@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import {
-  Brain, CheckCircle2, CreditCard, Download, FileText, Headphones, LoaderCircle, Package,
-  Plus, ReceiptText, Send, Receipt, Ticket, Type} from "lucide-react";
+import { Brain, FileText, Headphones, Package, ReceiptText } from "lucide-react";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import { ordersSeed } from "../data/assets.jsx";

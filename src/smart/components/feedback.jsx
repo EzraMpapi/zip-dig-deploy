@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  AlertCircle, Download, Send, X, Bus, CheckCircle2, Contact, Copy, Delete, Link, Mail, MessageCircle, MessageSquare, Phone, Receipt, Save} from "lucide-react";
+import { Mail, MessageCircle, MessageSquare } from "lucide-react";
 import { TOAST_DURATION, TOAST_STYLE } from "../components/ActivityStream.jsx";
 import { invoiceCreatedBus } from "../data/sales.jsx";
 import { confirmBus, receiptBus, toastBus, waBus } from "../lib/buses.jsx";

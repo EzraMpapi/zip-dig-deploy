@@ -1,4 +1,4 @@
-import { Building, Construction, Target } from "lucide-react";
+import {  } from "lucide-react";
 import { lineTotal } from "../lib/format.jsx";
 
 /* ══════════════ BUSINESS INTELLIGENCE DATA ══════════════ */

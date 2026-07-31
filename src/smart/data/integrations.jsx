@@ -1,5 +1,4 @@
-import {
-  Briefcase, CreditCard, Globe, Hash, MessageCircle, ShoppingBag, Store, Video, Wallet, Calendar, Cloud, Clover, Link, Server, Slack, Square, Terminal, Webhook, Workflow} from "lucide-react";
+import { Briefcase, CreditCard, Globe, Hash, MessageCircle, ShoppingBag, Store, Video, Wallet } from "lucide-react";
 
 /* ══════════════ ENTERPRISE INTEGRATIONS ══════════════ */
 /* --------------------------- ENTERPRISE INTEGRATIONS --------------------------- */

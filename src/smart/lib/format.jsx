@@ -1,4 +1,4 @@
-import { Lock, Settings } from "lucide-react";
+import {  } from "lucide-react";
 export const money = (n) => new Intl.NumberFormat("en-US").format(n);
 
 // Was a hardcoded Tanzania-only constant (0.18, "standard VAT") — the

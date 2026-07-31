@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Bell, Building2, Download, FileText, History, Mail, MoreHorizontal, Phone, Plus, Printer,
-  QrCode, Search, Star, TrendingUp, Trophy, UploadCloud, Users, Wallet, X, Activity, Code, Construction, Contact, Delete, Facebook, Filter, Import, Instagram, Kanban, List, MessageCircle, Move, Rows, Save, Settings, Share, Table} from "lucide-react";
+import { Building2, History, Phone, TrendingUp, Trophy, Users, Wallet } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip,
   XAxis, YAxis

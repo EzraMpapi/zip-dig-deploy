@@ -1,5 +1,4 @@
-import {
-  FileImage, FileSpreadsheet, FileText, Construction, Files, Warehouse} from "lucide-react";
+import { FileImage, FileSpreadsheet, FileText } from "lucide-react";
 
 /* ══════════════ DOCUMENTS DATA ══════════════ */
 /* -------------------------------- DOCUMENTS DATA --------------------------------- */

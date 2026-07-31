@@ -1,4 +1,4 @@
-import { Shell } from "lucide-react";
+import {  } from "lucide-react";
 import { ErrorBoundary } from "./app/ErrorBoundary.jsx";
 import { SmartManager } from "./app/Shell.jsx";
 import { AppLock, GlobalStyles } from "./components/ui.jsx";

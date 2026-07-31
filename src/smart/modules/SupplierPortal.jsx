@@ -1,6 +1,5 @@
 import { useState } from "react";
-import {
-  ClipboardList, FileCheck, FileText, Lock, Truck, UploadCloud, Wallet, Save, Upload} from "lucide-react";
+import { ClipboardList, FileCheck, FileText, Truck, UploadCloud, Wallet } from "lucide-react";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import { filesSeed } from "../data/documents.jsx";

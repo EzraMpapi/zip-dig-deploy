@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  CheckCircle2, ChevronRight, Clock, Download, FileText, Minus, Plus, Printer, ReceiptText,
-  Repeat, Search, X, ArrowUpDown, Copy, CreditCard, Delete, Disc, History, Link, Mail, MessageCircle, Pause, Quote, Save, Send} from "lucide-react";
+import { FileText, Repeat } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

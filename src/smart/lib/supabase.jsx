@@ -1,4 +1,4 @@
-import { Apple, Cloud, Type } from "lucide-react";
+import {  } from "lucide-react";
 /* ──────────────────────────────────────────────────────────────────────────
    SUPABASE CLIENT — hand-rolled, fetch-based (no SDK)
 

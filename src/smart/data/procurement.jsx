@@ -1,4 +1,4 @@
-import { Settings, Warehouse } from "lucide-react";
+import {  } from "lucide-react";
 import { TODAY } from "../lib/format.jsx";
 
 /* ══════════════ PROCUREMENT DATA ══════════════ */

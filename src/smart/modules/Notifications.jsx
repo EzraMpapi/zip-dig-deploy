@@ -1,6 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowUpDown, Bell, ChevronRight, FileText, Lock, Send, Route, Settings, Slack, Type, Webhook} from "lucide-react";
+import { ArrowUpDown, Bell, FileText } from "lucide-react";
 import { EmptyState, SkeletonRows, inputClass } from "../components/ui.jsx";
 import { ALERT_PRIORITY } from "../data/core.jsx";
 import {

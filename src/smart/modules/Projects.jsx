@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  CalendarCheck, CheckCircle2, ChevronRight, CircleDollarSign, Clock, Download, FileText,
-  Flag, Kanban, ListTodo, Plus, Printer, Trash2, Users, X, Delete, Files, Group, Link, List, Milestone, Move, Upload} from "lucide-react";
+import { CalendarCheck, CircleDollarSign, Clock, FileText, Flag, Kanban, ListTodo } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

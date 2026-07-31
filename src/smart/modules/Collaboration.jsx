@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  BookOpen, Calendar, Check, CheckCheck, CheckCircle2, ChevronLeft, ChevronRight, Circle,
-  ExternalLink, EyeOff, FileText, Hash, Inbox, Mail, MessageCircle, MessageSquare, Plus,
-  Search, Send, Settings, Star, Trash2, Users, Video, X, Zap, Award, Book, Cloud, Contact, Cross, Delete, Edit3, File, Folders, Group, Merge, Notebook, Phone, Receipt, Reply, Save, Server, Sun, Type, Warehouse} from "lucide-react";
+import { BookOpen, Calendar, FileText, Mail, MessageCircle, MessageSquare, Send, Star, Users, Edit3 } from "lucide-react";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import {
   MEETING_TYPES,

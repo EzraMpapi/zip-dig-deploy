@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  AlertCircle, CheckCircle2, ChevronRight, CircleDollarSign, ClipboardList, Clock, Cog,
-  Factory, Plus, ShieldCheck, Star, Wrench, X, Check, Delete, Type} from "lucide-react";
+import { CheckCircle2, CircleDollarSign, ClipboardList, Cog, Factory, ShieldCheck, Wrench } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis

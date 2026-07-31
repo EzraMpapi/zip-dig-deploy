@@ -1,8 +1,5 @@
 import { useRef, useState } from "react";
-import {
-  AlertCircle, Award, Brain, Calendar, CheckCircle2, CircleDollarSign, ClipboardCheck, Copy,
-  Download, FileCheck, FileText, Gauge, LoaderCircle, Mail, Mic, Package, RotateCcw, Send,
-  TrendingUp, Users, Check, Chrome, Cross, Edit, Forward, Key, Reply, Speech, Type, Video, Workflow} from "lucide-react";
+import { Award, Brain, CircleDollarSign, ClipboardCheck, FileCheck, FileText, Gauge, Mic, Package, TrendingUp, Users } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
