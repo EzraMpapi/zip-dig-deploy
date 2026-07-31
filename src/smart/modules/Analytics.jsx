@@ -675,7 +675,6 @@ export function MicrofinanceModule({ currentUser }) {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
-            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
               <p className="text-[13.5px] font-semibold text-[#111827] mb-3">Loan Portfolio by Product (TZS k)</p>
               {(() => {
                 const prodData = ["Personal Loan","Business Loan","Agricultural Loan","Emergency Loan","Group Loan"].map((prod,i)=>{
