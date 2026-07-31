@@ -66,10 +66,8 @@ export function downloadCSV(filename, rows, columns) {
       const str = typeof val === "object" ? JSON.stringify(val) : String(val);
       return '"' + str.replace(/"/g, '""') + '"';
     }).join(",")
-  ).join("
-");
-  const csv = header + "
-" + body;
+  ).join("\n");
+  const csv = header + "\n" + body;
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");

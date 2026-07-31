@@ -353,8 +353,7 @@ export function BankReconciliationView({ invoices, expenses }) {
 
   function reconcile() {
     // Parse statement lines: date, description, amount (one per line, comma or tab separated)
-    const lines = statement.trim().split("
-").filter(Boolean).map((line) => {
+    const lines = statement.trim().split("\n").filter(Boolean).map((line) => {
       const parts = line.split(/[,	]+/).map((p) => p.trim());
       const amount = parseFloat(parts.find((p) => /^-?\d[\d,.]+$/.test(p.replace(/,/g, "")))?.replace(/,/g, "") || 0);
       const desc = parts.filter((p) => isNaN(Number(p.replace(/,/g, "")))).join(" ");
