@@ -1185,8 +1185,8 @@ export function BudgetsView({ expenses }) {
     return { name: cat.length > 12 ? cat.slice(0,12)+"…" : cat, actual:Math.round(actual), budget:limit, over:actual>limit&&limit>0 };
   }).filter(d => d.actual > 0 || d.budget > 0);
 
-  const totalBudget = budgets.rows.reduce((s,b) => s+b.monthlyLimit, 0);
-  const totalActual = expenses.filter(e => e.date >= monthStart).reduce((s,e) => s+e.amount, 0);
+  // totalBudget / totalActual are already computed above from the same rows.
+
   const overBudgetCats = chartData.filter(d => d.over).length;
 
   return (
