@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AlertCircle, Building2, Calendar, ChevronDown, Lock, MapPin, Moon, Search, Settings,
   Sparkles, Sun, X

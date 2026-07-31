@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle, Award, Banknote, Briefcase, CalendarCheck, CalendarDays, ChevronLeft,
   ChevronRight, CircleDollarSign, Clock, Download, Fingerprint, GraduationCap,
