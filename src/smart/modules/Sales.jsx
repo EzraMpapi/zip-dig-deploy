@@ -1,3 +1,5 @@
+import { emailBus } from "../modules/Collaboration.jsx";
+import { waBus } from "../lib/buses.jsx";
 import { useEffect, useMemo, useState } from "react";
 import { FileText, Repeat } from "lucide-react";
 import {

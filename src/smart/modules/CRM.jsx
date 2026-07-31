@@ -1,3 +1,4 @@
+import { emailBus } from "../modules/Collaboration.jsx";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, History, Phone, TrendingUp, Trophy, Users, Wallet } from "lucide-react";
 import {
@@ -13,7 +14,7 @@ import {
 } from "../components/ui.jsx";
 import { STAGES, contactsSeed } from "../data/core.jsx";
 import { SortableHeader, StagePill, sortRows, toggleSort } from "../data/pos.jsx";
-import { confirmAction } from "../lib/buses.jsx";
+import { confirmAction, waBus } from "../lib/buses.jsx";
 import { printCustomerStatement } from "../lib/export.jsx";
 import { TODAY, docId, lineTotal, money } from "../lib/format.jsx";
 import { mapContactRow, useCompanyTable } from "../lib/mappers.jsx";

@@ -7,7 +7,7 @@ import { FormField, inputClass } from "../components/ui.jsx";
 import { stockStatus } from "../data/inventory.jsx";
 import { detectUnusualExpenses } from "../lib/alerts.jsx";
 import { logAudit } from "../lib/buses.jsx";
-import { TODAY, lineTotal, money } from "../lib/format.jsx";
+import { TODAY, docId, lineTotal, money } from "../lib/format.jsx";
 import { mapCalendarEventRow, useCompanyTable } from "../lib/mappers.jsx";
 import { notify } from "../lib/notify.jsx";
 import { IS_CONFIGURED, sb } from "../lib/supabase.jsx";

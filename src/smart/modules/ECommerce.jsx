@@ -11,7 +11,7 @@ import {
   onlineOrdersSeed,
   storefrontSeed,
 } from "../data/ecommerce.jsx";
-import { STOCK_STATUS_COLOR } from "../data/inventory.jsx";
+import { STOCK_STATUS_COLOR, stockStatus } from "../data/inventory.jsx";
 import { KpiCard } from "../data/pos.jsx";
 import { money } from "../lib/format.jsx";
 import { mapProductRow, useCompanyTable } from "../lib/mappers.jsx";
