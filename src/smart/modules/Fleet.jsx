@@ -198,7 +198,7 @@ export function FleetManagementModule({ currentUser, company, onVehiclesLoad }) 
               ))}</tbody>
             </table>
           </div>
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4"><p className="text-[13
+          <div className="bg-white rounded-xl border border-slate-200/80 p-4"><p className="text-[11.5px] text-slate-400">Maintenance costs recorded here feed the cost-per-kilometre figures in the Analytics tab.</p></div>
         </div>
       )}
 
