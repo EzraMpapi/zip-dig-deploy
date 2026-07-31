@@ -46,6 +46,8 @@ export const SUPPORT_TABS = [
   { id: "ai", label: "AI Assistant", icon: Brain },
 ];
 
+const CHAT_STATUS_COLOR = { Active: "#16A34A", Open: "#16A34A", Pending: "#EAB308", "In Progress": "#2563EB", Resolved: "#0891B2", Closed: "#94A3B8" };
+
 export function CustomerSupport({ company }) {
   const [tab, setTab] = useState("tickets");
   const tickets = useCompanyTable("support_tickets", supportTicketsSeed, {

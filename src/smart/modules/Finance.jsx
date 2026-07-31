@@ -51,6 +51,8 @@ export const FIN_TABS = [
   { id: "assets", label: "Assets", icon: Package },
 ];
 
+const SCAN_DOC_TYPES = ["Receipt", "Invoice", "Bank Statement", "Purchase Order", "Delivery Note", "Contract", "Other"];
+
 export function Finance({ invoices, expensesHook, posTransactionsHook, currentUser, intent, clearIntent, company, employeesHook, inventoryHook }) {
   const [tab, setTab] = useState("overview");
 

@@ -8,6 +8,24 @@ import { TODAY, money } from "../lib/format.jsx";
 import { useCompanyTable } from "../lib/mappers.jsx";
 import { notify } from "../lib/notify.jsx";
 
+const FLT_VEHICLES_SEED = [
+  { id:"VEH-001", name:"Toyota Hiace", reg:"T123 ABC", make:"Toyota", model:"Hiace", year:2019, type:"Van",   status:"Active",      driver:"Juma Batenga", mileage:184320, km:184320, fuel:"Diesel", cost:2400, cpk:38, insurance:"2026-11-30", nextService:"2026-08-15" },
+  { id:"VEH-002", name:"Isuzu FRR",    reg:"T456 DEF", make:"Isuzu",  model:"FRR",   year:2020, type:"Truck", status:"Active",      driver:"Fatuma Salim", mileage:96540,  km:96540,  fuel:"Diesel", cost:3900, cpk:52, insurance:"2026-09-30", nextService:"2026-08-02" },
+  { id:"VEH-003", name:"Toyota Land Cruiser", reg:"T789 GHI", make:"Toyota", model:"Land Cruiser", year:2018, type:"SUV", status:"Maintenance", driver:"David Chen", mileage:212880, km:212880, fuel:"Diesel", cost:1800, cpk:44, insurance:"2027-01-31", nextService:"2026-07-28" },
+];
+
+const FLT_TRIPS_SEED = [
+  { id:"TRP-001", vehicleId:"VEH-001", vehicle:"Toyota Hiace", driver:"Juma Batenga", date:"2026-07-02", start:"Dar es Salaam", end:"Morogoro", purpose:"Customer delivery", distance:196, fuelUsed:22, cost:66, status:"Completed" },
+  { id:"TRP-002", vehicleId:"VEH-002", vehicle:"Isuzu FRR",    driver:"Fatuma Salim", date:"2026-07-03", start:"Dar es Salaam", end:"Dodoma",   purpose:"Stock transfer",    distance:452, fuelUsed:58, cost:174, status:"Completed" },
+  { id:"TRP-003", vehicleId:"VEH-001", vehicle:"Toyota Hiace", driver:"Juma Batenga", date:"2026-07-05", start:"Dar es Salaam", end:"Tanga",    purpose:"Site visit",        distance:354, fuelUsed:41, cost:123, status:"In Progress" },
+];
+
+const FLT_MAINTENANCE_SEED = [
+  { id:"MNT-001", vehicle:"Toyota Hiace",        type:"Service",    date:"2026-05-18", workshop:"Kariakoo Auto Works", mileageAtService:178400, cost:420,  status:"Completed" },
+  { id:"MNT-002", vehicle:"Isuzu FRR",           type:"Tyres",      date:"2026-06-11", workshop:"Mikocheni Tyre Hub",  mileageAtService:92100,  cost:1180, status:"Completed" },
+  { id:"MNT-003", vehicle:"Toyota Land Cruiser", type:"Suspension", date:"2026-07-01", workshop:"Kariakoo Auto Works", mileageAtService:211900, cost:860,  status:"In Progress" },
+];
+
 export function FleetManagementModule({ currentUser, company, onVehiclesLoad }) {
   const [tab, setTab] = useState("overview");
   const vehicles    = useCompanyTable("flt_vehicles",    FLT_VEHICLES_SEED,    { mapRow: r => r });

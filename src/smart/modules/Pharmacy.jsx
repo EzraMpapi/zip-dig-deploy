@@ -397,7 +397,7 @@ export function PharmacyManagementModule({ currentUser, company, onStockLoad }) 
 
       {/* PHARMACY ANALYTICS TAB */}
       {tab === "analytics" && (() => {
-        const catData = PHM_DRUG_CATEGORIES.map((cat,i)=>({
+        const catData = DRUG_CATEGORIES.map((cat,i)=>({
           name: cat.length > 12 ? cat.slice(0,10)+"…" : cat,
           value: stock.rows.filter(s=>drugs.rows.find(d=>d.id===s.drugId)?.category===cat).reduce((s,r)=>s+r.stock,0),
           fill:["#059669","#2563EB","#D97706","#7C3AED","#EF4444","#0891B2","#DC2626","#0F766E"][i%8],
