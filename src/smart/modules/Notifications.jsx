@@ -71,7 +71,9 @@ export function Notifications({ inventory, invoices, expenses, leaveRequests, wo
   }
 
   return (
+    <>
     {/* ── Smart Alerts Panel ── */}
+
     {smartAlerts && smartAlerts.length > 0 && (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
