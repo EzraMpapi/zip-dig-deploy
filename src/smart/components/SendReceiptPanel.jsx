@@ -68,7 +68,8 @@ export function DailyBriefing({ company, currentUser, canManage, invoices, inven
     const pipeVal  = openOpps.reduce((s, l) => s + (l.value || 0), 0);
 
     // HR
-    const emps      = Array.isArray(employees) ? employees : (employees?.rows || []);
+    const emps      = Array.isArray(employees) ? employees
+                      : Array.isArray(employees?.rows) ? employees.rows : [];
     const activeEmps= emps.filter(e => e.status === "Active");
     const onLeave   = (leaveRequests?.rows || []).filter(l =>
       l.status === "Approved" && l.startDate <= today && l.endDate >= today
