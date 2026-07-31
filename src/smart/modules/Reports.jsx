@@ -826,7 +826,6 @@ export function BalanceSheetReport({ invoices, expenses, inventory, posTransacti
       </div>
     </div>
       </div>
-    </div>
   );
 }
 
