@@ -397,9 +397,7 @@ export function BankReconciliationView({ invoices, expenses }) {
       <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 space-y-3">
         <p className="text-[12.5px] font-medium text-[#111827]">Bank statement (paste lines)</p>
         <textarea className={inputClass + " h-32 resize-none"} value={statement} onChange={(e) => setStatement(e.target.value)}
-          placeholder={"2026-07-10, King Fahad Medical City, 1240000
-2026-07-12, Supplier payment - Karibu Tools, 85000
-2026-07-14, Salary disbursement, 3290000"} />
+          placeholder={"2026-07-10, King Fahad Medical City, 1240000\n2026-07-12, Supplier payment - Karibu Tools, 85000\n2026-07-14, Salary disbursement, 3290000"} />
         <div className="flex gap-2">
           <button onClick={reconcile} className="btn-primary text-white text-[12.5px] font-medium rounded-xl px-4 py-2.5">Run reconciliation</button>
           {ran && <button onClick={() => { setRan(false); setMatched([]); setUnmatched([]); }} className="text-[12.5px] text-slate-500 border border-slate-200 rounded-xl px-4 py-2.5">Clear</button>}
