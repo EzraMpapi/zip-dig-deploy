@@ -85,7 +85,7 @@ export function HotelManagementModule({ currentUser, company }) {
     <div className="space-y-4">
       {/* HEADER */}
       <div className="rounded-2xl px-6 py-5 relative overflow-hidden" style={{background:`linear-gradient(135deg,#0F172A 0%,${HTL_BLUE} 45%,#1e40af 100%)`}}>
-        <div className="absolute inset-0 opacity-5" style={{backgroundImage:"url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><path d=%22M0 30h60M30 0v60%22 stroke=%22white%22 stroke-width=%221%22 fill=%22none%22/></svg>'")}}/> 
+        <div className="absolute inset-0 opacity-5" style={{backgroundImage:"url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><path d=%22M0 30h60M30 0v60%22 stroke=%22white%22 stroke-width=%221%22 fill=%22none%22/></svg>')"}}/> 
         <div className="relative flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1"><Hotel size={22} className="text-white"/><h1 className="text-[20px] font-bold text-white">{company?.name||"Hotel"} Property Management</h1></div>
