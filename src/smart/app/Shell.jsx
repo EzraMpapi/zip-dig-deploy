@@ -460,7 +460,7 @@ export function SmartManager() {
   // localStorage pattern already proven for App Lock, since visual theme
   // is reasonably a device setting, not a company-wide policy pushed to
   // every user's screen regardless of their own preference.
-  const [darkMode, setDarkMode] = useState(false);
+  // (darkMode state is declared once above, near the dark-mode effect.)
   // Accessibility controls — WCAG 2.2 AA's two buildable gaps closed:
   // adjustable text size (SC 1.4.4: content usable at larger sizes,
   // done at the root so every rem-derived size in the app scales) and
