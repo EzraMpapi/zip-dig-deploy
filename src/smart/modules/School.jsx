@@ -194,6 +194,7 @@ export function SchoolManagementModule({ currentUser, company }) {
                   </div>
                 );
               })()}
+            </div>
             <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
               <p className="text-[13.5px] font-semibold text-[#111827] mb-3">Recent Exams</p>
               <div className="space-y-2">
