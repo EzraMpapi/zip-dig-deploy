@@ -19,6 +19,15 @@
  */
 
 @theme inline {
+  /* SMART MANAGER brand system (ported from the app's tailwind config). */
+  --font-sans: Inter, system-ui, sans-serif;
+  --color-brand: #16a34a;
+  --color-brand-light: #22c55e;
+  --color-brand-mint: #dcfce7;
+  --color-brand-surface: #f8fafc;
+  --color-brand-line: #e5e7eb;
+  --color-brand-ink: #111827;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -142,3 +151,14 @@
     color: var(--color-foreground);
   }
 }
+
+/* ── SMART MANAGER app base styles (ported from its index.css) ───────────── */
+:root { color-scheme: light; }
+* { font-family: "Inter", system-ui, -apple-system, sans-serif; }
+html, body { height: 100%; }
+body { margin: 0; background: #f8fafc; -webkit-font-smoothing: antialiased; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar-track { background: transparent; }
