@@ -2156,7 +2156,8 @@ export function Attendance({ employees }) {
                   </td>
                 </tr>
               ))}
-              {!loading && rows.length === 0 && <tr><td colSpan={6}><EmptyState icon={CalendarCheck} title="No
+              {!loading && rows.length === 0 && <tr><td colSpan={6}><EmptyState icon={CalendarCheck} title="No attendance records yet" hint="Log attendance or clock in with the biometric panel above." /></td></tr>}
+            </tbody>
           </table>
         </div>
       </div>
