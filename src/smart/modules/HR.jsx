@@ -1706,8 +1706,7 @@ export function Recruitment() {
       )}
 
       {selected && <CandidatePanel candidate={selected} onClose={() => setSelected(null)} onMove={moveStage} onDelete={deleteCandidate} />}
-      {showForm && <CandidateFormPanel onClose={() => setShowForm(false)} onSubmit={addCand
-idate} />}
+      {showForm && <CandidateFormPanel onClose={() => setShowForm(false)} onSubmit={addCandidate} />}
     </div>
   );
 }
