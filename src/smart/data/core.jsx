@@ -431,12 +431,15 @@ export function useSmartAlerts(data) {
 
 // Alert priority colour maps
 export const ALERT_PRIORITY = {
+  critical: { bg: "#FEF2F2", border: "#FECACA", text: "#991B1B", badge: "#DC2626", badgeText: "#FFFFFF" },
+  high:     { bg: "#FFF7ED", border: "#FED7AA", text: "#9A3412", badge: "#EA580C", badgeText: "#FFFFFF" },
+  medium:   { bg: "#FEFCE8", border: "#FEF08A", text: "#854D0E", badge: "#CA8A04", badgeText: "#FFFFFF" },
+  low:      { bg: "#F0F9FF", border: "#BAE6FD", text: "#075985", badge: "#0284C7", badgeText: "#FFFFFF" },
+};
 
 // ── useBulkSelect — table multi-select with actions ─────────────────────────
 // Usage: const {selected,toggle,toggleAll,clearAll,isSelected,isAllSelected,count} = useBulkSelect(rows)
 
-// ── useBulkSelect — table multi-select with actions ─────────────────────────
-// Usage: const {selected,toggle,toggleAll,clearAll,isSelected,isAllSelected,count} = useBulkSelect(rows)
 export function useBulkSelect(rows) {
   const [selected, setSelected] = useState(new Set());
   const ids = useMemo(() => rows.map(r => r.id), [rows]);
