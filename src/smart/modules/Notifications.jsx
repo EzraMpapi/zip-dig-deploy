@@ -133,7 +133,9 @@ export function Notifications({ inventory, invoices, expenses, leaveRequests, wo
       {tab === "routing" && <AlertRouting rules={rules} channels={channels.rows} alerts={alerts} onLog={logDispatch} />}
       {tab === "log" && <NotificationLog log={log} />}
     </div>
+    </>
   );
+
 }
 
 /* ══════════════ NOTIFICATION CHANNELS ══════════════ */
