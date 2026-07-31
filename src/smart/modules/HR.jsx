@@ -792,7 +792,8 @@ export function WorkingTimetable({ employees, currentUser, canManage }) {
                         }
                       </td>
                     </tr>
-    
+                  );
+                })}
               </tbody>
             </table>
           )}
