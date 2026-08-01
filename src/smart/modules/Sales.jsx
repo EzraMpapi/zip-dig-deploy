@@ -1,7 +1,7 @@
 import { emailBus } from "../modules/Collaboration.jsx";
 import { waBus } from "../lib/buses.jsx";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, ChevronRight, Clock, CreditCard, Download, FileText, Mail, MessageCircle, Minus, Plus, Printer, ReceiptText, Repeat, Search, Send, X } from "lucide-react";
+import { ArrowUpDown, CheckCircle2, ChevronRight, Clock, CreditCard, Download, FileText, Mail, MessageCircle, Minus, Plus, Printer, ReceiptText, Repeat, Search, Send, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

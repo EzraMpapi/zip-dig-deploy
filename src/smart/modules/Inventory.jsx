@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertCircle, ArrowUpDown, Ban, Bell, Building2, CalendarCheck, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardCheck, Clock, Crosshair, Download, Layers, LayoutDashboard, Mail, Package, Phone, Plus, Printer, Search, Truck, Users, X } from "lucide-react";
+import { AlertCircle, ArrowUpDown, Ban, Bell, Building2, CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardCheck, Clock, Crosshair, Download, Layers, LayoutDashboard, Mail, Package, Phone, Plus, Printer, Search, Truck, UploadCloud, Users, X } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis

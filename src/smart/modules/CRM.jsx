@@ -1,6 +1,6 @@
 import { emailBus } from "../modules/Collaboration.jsx";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Building2, Download, FileText, History, Mail, MessageCircle, Phone, Plus, Printer, QrCode, Search, Star, TrendingUp, Trophy, Users, Wallet, X } from "lucide-react";
+import { Bell, Building2, Download, FileText, History, Mail, MessageCircle, MoreHorizontal, Phone, Plus, Printer, QrCode, Search, Star, TrendingUp, Trophy, UploadCloud, Users, Wallet, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip,
   XAxis, YAxis

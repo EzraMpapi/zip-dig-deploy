@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Banknote, BookOpen, Building2, Clock, Cog, Download, FileCheck, Fingerprint, Globe, HardHat, HeartPulse, Info, Landmark, Layers, Lock, Mail, MapPin, Package, Palette, Phone, PhoneCall, Plus, Printer, Save, ShieldCheck, Sparkles, Store, Trash2, Truck, Upload, UserPlus, Users, Wallet } from "lucide-react";
+import { AlertCircle, Banknote, BookOpen, Building2, CheckCircle2, Clock, Cog, Download, FileCheck, Fingerprint, Globe, HardHat, HeartPulse, ImageIcon, Info, Landmark, Layers, Lock, Mail, MapPin, Package, Palette, Phone, PhoneCall, Plus, Printer, Save, ShieldCheck, Sparkles, Store, Trash2, Truck, Upload, UserPlus, Users, Wallet } from "lucide-react";
 import * as XLSX from "xlsx";
 import { EmptyState, FormField, SkeletonRows, inputClass } from "../components/ui.jsx";
 import { MODULES, ROLES } from "../data/core.jsx";
