@@ -41,7 +41,7 @@ import { downloadCSV } from "../modules/Reports.jsx";
 
 /* ══════════════ SALES ══════════════ */
 /* --------------------------------- SALES ------------------------------------ */
-export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, currentUser, intent, clearIntent }) {
+export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, currentUser, crm, intent, clearIntent }) {
   const [tab, setTab] = useState("quotations");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
@@ -724,6 +724,7 @@ export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, 
             if (patch) setSelected((s) => (s && s.id === id ? { ...s, ...patch } : s));
           }}
           onProcessReturn={(payload) => processOrderReturn(selected, payload)}
+          onPrintInvoice={printInvoice}
         />
       )}
       {showForm && (
@@ -735,7 +736,7 @@ export function Sales({ invoices, inventory, subscriptionsHook, quotationsHook, 
   );
 }
 
-export function DocPanel({ doc, onClose, onAdvance, onDelete, onRecordPayment, onProcessReturn }) {
+export function DocPanel({ doc, onClose, onAdvance, onDelete, onRecordPayment, onProcessReturn, onPrintInvoice }) {
   // Escape key closes the panel — WCAG 2.1 SC 2.1.2 (keyboard trap) and
   // basic quality-of-life for keyboard users. Added here because DocPanel
   // is the highest-traffic slide-over in the system (Sales, Finance, Procurement).
@@ -807,7 +808,7 @@ export function DocPanel({ doc, onClose, onAdvance, onDelete, onRecordPayment, o
             </div>
             <div className="flex items-center gap-1.5">
               {isInvoice && (
-                <button onClick={() => printInvoice(doc)} title="Print invoice"
+                <button onClick={() => onPrintInvoice?.(doc)} title="Print invoice"
                   className="flex items-center gap-1 text-[11.5px] font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-[#16A34A] hover:border-[#16A34A] transition-colors">
                   <Printer size={13} /> Print
                 </button>

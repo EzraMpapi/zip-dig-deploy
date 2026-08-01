@@ -756,7 +756,7 @@ export function EmailCenter({ currentUser, crm, employees, invoices, company }) 
                   {showCC?"Hide CC":"+ CC"}
                 </button>
                 {/* Contact autocomplete */}
-                {showCont && filteredContacts.length>0 && (
+                {showContacts && filteredContacts.length>0 && (
                   <div className="absolute top-full left-10 right-0 z-20 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto mt-1">
                     {filteredContacts.slice(0,8).map(ct=>(
                       <button key={ct.id} onMouseDown={()=>{setTo(ct.name+" <"+ct.email+">");setShowCont(false);setContQ("");}}

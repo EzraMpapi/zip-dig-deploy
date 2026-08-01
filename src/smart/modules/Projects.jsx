@@ -34,7 +34,7 @@ import { downloadCSV, printReport } from "../modules/Reports.jsx";
 
 /* ══════════════ PROJECTS ══════════════ */
 /* ---------------------------------- PROJECTS ------------------------------------ */
-export function Projects({ filesHook, expensesHook }) {
+export function Projects({ filesHook, expensesHook, company }) {
   const projects = useCompanyTable("projects", projectsSeed, { order: { col: "start_date", ascending: false }, mapRow: mapProjectRow });
   const tasks = useCompanyTable("project_tasks", projectTasksSeed, { order: { col: "due_date", ascending: true }, mapRow: mapProjectTaskRow });
   const milestones = useCompanyTable("project_milestones", projectMilestonesSeed, { order: { col: "due_date", ascending: true }, mapRow: mapMilestoneRow });

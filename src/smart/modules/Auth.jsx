@@ -541,7 +541,7 @@ export function SignupPage({ onAuthenticated, onSwitchToLogin }) {
                   </select>
                 </div>
                 {isPortalRole && <AuthTextField label="Customer or supplier reference" icon={Building2} value={customerRef} onChange={(e) => setCustomerRef(e.target.value)} placeholder="As it appears in the system" />}
-                <button onClick={handleSubmit} disabled={busy || !account.fullName.trim() || !account.email.trim() || !account.password || !joinCode.trim()}
+                <button onClick={handleFinalSubmit} disabled={busy || !account.fullName.trim() || !account.email.trim() || !account.password || !joinCode.trim()}
                   className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white disabled:opacity-50 transition-all"
                   style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}>
                   {busy ? "Joining…" : "Join company"}
@@ -606,7 +606,7 @@ export function SignupPage({ onAuthenticated, onSwitchToLogin }) {
                   </select>
                 </div>
                 <AuthTextField label="First branch name" icon={Building2} value={firstBranch} onChange={(e) => setFirstBranch(e.target.value)} placeholder="Head Office" />
-                <button onClick={handleSubmit} disabled={busy || !company.name.trim()}
+                <button onClick={handleFinalSubmit} disabled={busy || !company.name.trim()}
                   className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white disabled:opacity-50 transition-all"
                   style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}>
                   {busy ? "Creating your account…" : "Launch Smart Manager 🚀"}

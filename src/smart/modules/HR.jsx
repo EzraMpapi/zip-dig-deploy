@@ -363,7 +363,7 @@ export function WorkingTimetable({ employees, currentUser, canManage }) {
       }).join("");
       return `<div style="margin-bottom:20px;page-break-inside:avoid">
         <div style="background:${DARK};color:white;padding:8px 14px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:800;font-size:13px">${wd.label} ${wd.num} ${d===TODAY.toISOString().slice(0,10)?"· Today":""}</div>
+          <div style="font-weight:800;font-size:13px">${wd.label} ${wd.num} ${wd.isToday?"· Today":""}</div>
           <div style="font-size:11px;opacity:.6">${dayDs.length} dut${dayDs.length!==1?"ies":"y"}</div>
         </div>
         ${dayDs.length===0?`<div style="padding:12px 14px;font-size:11px;color:#9CA3AF;background:#F8FAFB;border-radius:0 0 8px 8px">No duties scheduled</div>`:
