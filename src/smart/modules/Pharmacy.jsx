@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, BarChart3, LayoutDashboard, Package, Receipt, Syringe, Tablets, Truck } from "lucide-react";
+import { AlertCircle, BarChart3, Download, LayoutDashboard, Package, Plus, Receipt, Search, Syringe, Tablets, Truck } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

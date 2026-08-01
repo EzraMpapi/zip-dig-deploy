@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, Bus, CalendarDays, CircleDollarSign, LayoutDashboard, Library, NotebookPen, School, UserCheck, Users } from "lucide-react";
+import { AlertCircle, Bus, CalendarDays, CircleDollarSign, Download, LayoutDashboard, Library, NotebookPen, Plus, Printer, School, Search, UserCheck, UserPlus, Users } from "lucide-react";
 import {
   Cell, Pie, PieChart, ResponsiveContainer, Tooltip
 } from "recharts";

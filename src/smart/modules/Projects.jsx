@@ -1,6 +1,6 @@
 import { daysBetween } from "../data/finance.jsx";
 import { useMemo, useState } from "react";
-import { CalendarCheck, CircleDollarSign, Clock, FileText, Flag, Kanban, ListTodo } from "lucide-react";
+import { CalendarCheck, ChevronRight, CircleDollarSign, Clock, Download, FileText, Flag, Kanban, ListTodo, Plus, Printer, Trash2, Users, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

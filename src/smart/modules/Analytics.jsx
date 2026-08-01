@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, BarChart2, BarChart3, CheckCircle2, CircleDollarSign, CircleUserRound, Crosshair, Factory, FileText, Gauge, GitBranch, Globe, Grid3x3, HandCoins, Landmark, LayoutDashboard, Lock, Package, Receipt, ShieldCheck, Sparkles, Target, TrendingUp, Users, Wallet } from "lucide-react";
+import { AlertCircle, BarChart2, BarChart3, CheckCircle2, ChevronRight, CircleDollarSign, CircleUserRound, ClipboardList, Crosshair, Factory, FileText, Gauge, GitBranch, Globe, Grid3x3, HandCoins, Landmark, LayoutDashboard, LoaderCircle, Lock, Package, Plus, Receipt, ShieldCheck, Sparkles, Target, Trash2, TrendingUp, UserPlus, Users, Wallet, X } from "lucide-react";
 import {
   Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart,
   PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CircleDollarSign, Globe, Percent, ShoppingCart, Store } from "lucide-react";
+import { ChevronRight, CircleDollarSign, CreditCard, Globe, Grid3x3, List, Package, Percent, Search, ShoppingCart, Star, Store, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";

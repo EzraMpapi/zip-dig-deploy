@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, CalendarCheck, CircleDollarSign, LayoutDashboard, TrendingUp, Users, Wallet } from "lucide-react";
+import { AlertCircle, CalendarCheck, CircleDollarSign, LayoutDashboard, Plus, TrendingUp, UserPlus, Users, Wallet } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

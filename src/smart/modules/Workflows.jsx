@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { GitBranch, Store, Circle } from "lucide-react";
+import { Circle, GitBranch, Plus, Store, Trash2, X } from "lucide-react";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import { NOTIFICATION_CHANNELS } from "../data/notifications.jsx";
 import {

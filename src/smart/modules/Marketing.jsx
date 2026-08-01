@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, FileText, Megaphone, MessageSquare, MousePointerClick, Users } from "lucide-react";
+import { ChevronRight, Clock, Eye, FileText, Mail, Megaphone, MessageSquare, MousePointerClick, Plus, Send, Users, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip,
   XAxis, YAxis

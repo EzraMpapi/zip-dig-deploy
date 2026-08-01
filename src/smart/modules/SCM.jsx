@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, ClipboardList, Clock, Truck } from "lucide-react";
+import { CheckCircle2, ChevronRight, ClipboardList, Clock, Plus, Search, Truck, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

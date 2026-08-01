@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, BookOpen, CalendarDays, ChefHat, Layers, UtensilsCrossed } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, ChefHat, Layers, Plus, Printer, QrCode, UtensilsCrossed, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

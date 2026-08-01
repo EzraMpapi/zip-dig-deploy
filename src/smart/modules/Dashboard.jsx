@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BarChart3, Brain, CircleDollarSign, Clock, CreditCard, Factory, FileText, Headphones, Landmark, LayoutDashboard, Megaphone, MessageCircle, Package, ReceiptText, ScanLine, ShoppingBag, Sparkles, Store, TrendingDown, UserCheck, UserCircle, UserPlus, Users, Wallet, FolderKanban, TrendingUp } from "lucide-react";
+import { BarChart3, Brain, Briefcase, ChevronRight, Circle, CircleDollarSign, Clock, CreditCard, Factory, FileText, FolderKanban, Headphones, Landmark, LayoutDashboard, Megaphone, MessageCircle, Package, ReceiptText, ScanLine, ShoppingBag, Sparkles, Store, TrendingDown, TrendingUp, UserCheck, UserCircle, UserPlus, Users, Wallet, X } from "lucide-react";
 import {
   Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Package, Users } from "lucide-react";
+import { Fingerprint, Icon, LoaderCircle, Lock, Package, Plus, Search, Trash2, Users, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { COMPANY_CATEGORIES } from "../data/core.jsx";

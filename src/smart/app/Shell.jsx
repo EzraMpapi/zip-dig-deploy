@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {  } from "lucide-react";
+import { Building2, Calendar, ChevronDown, Lock, MapPin, Moon, Search, Settings, Sparkles, Sun, X } from "lucide-react";
 import { ActivityStream, mapPosTransactionRow } from "../components/ActivityStream.jsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { DailyBriefing } from "../components/SendReceiptPanel.jsx";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Briefcase, Building2, ClipboardList, Factory, FileText, HardHat, HeartPulse, Lock, Mail, Package, ReceiptText, Sparkles, Store, TrendingUp, Truck, User, Users, Wallet } from "lucide-react";
+import { Briefcase, Building2, ChevronLeft, ClipboardList, Eye, EyeOff, Factory, FileText, HardHat, HeartPulse, LoaderCircle, Lock, Mail, Package, ReceiptText, Sparkles, Store, TrendingUp, Truck, User, Users, Wallet } from "lucide-react";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { CategoryPicker, FormField, inputClass } from "../components/ui.jsx";
 import { COMPANY_CATEGORIES, ROLES } from "../data/core.jsx";
