@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, CalendarCheck, ClipboardCheck, FileText, FlaskConical, HeartPulse, LayoutDashboard, Package, Pill, Receipt, ScanLine, Stethoscope, Users } from "lucide-react";
+import { Activity, AlertCircle, CalendarCheck, CheckCircle2, ClipboardCheck, Download, Edit2, Eye, FileText, FlaskConical, HeartPulse, LayoutDashboard, Package, Pill, Plus, Printer, Receipt, ScanLine, Stethoscope, UserPlus, Users, X } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis,
   YAxis

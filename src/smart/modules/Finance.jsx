@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Banknote, BookOpen, CircleDollarSign, ClipboardList, FileText, Landmark, LayoutDashboard, Package, Percent, ScanText, Smartphone, Target, TrendingDown, UserPlus, Wallet, Zap, CreditCard, TrendingUp } from "lucide-react";
+import { AlertCircle, Banknote, BookOpen, CheckCircle2, ChevronRight, CircleDollarSign, ClipboardList, Clock, CreditCard, Download, FileText, Landmark, LayoutDashboard, Mail, MessageCircle, Package, Percent, Plus, Printer, ScanText, Search, Smartphone, Target, TrendingDown, TrendingUp, UploadCloud, UserPlus, Wallet, X, Zap } from "lucide-react";
 import {
   Area, AreaChart, Bar, CartesianGrid, Cell, ComposedChart, Line, PolarAngleAxis, PolarGrid,
   Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {  } from "lucide-react";
+import { AlertCircle, Building2, Calendar, ChevronDown, Lock, MapPin, Moon, Search, Settings, Sparkles, Sun, X } from "lucide-react";
 import { ActivityStream, mapPosTransactionRow } from "../components/ActivityStream.jsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { DailyBriefing } from "../components/SendReceiptPanel.jsx";
@@ -811,7 +811,7 @@ export function SmartManager() {
             />
           )}
           {active === "crm" && <CRM crm={crm} invoices={invoices} expenses={expenses} suppliers={suppliers} />}
-          {active === "sales" && <Sales invoices={invoices} inventory={inventory} subscriptionsHook={subscriptions} quotationsHook={quotations} currentUser={currentUser} intent={intent} clearIntent={clearIntent} />}
+          {active === "sales" && <Sales invoices={invoices} inventory={inventory} subscriptionsHook={subscriptions} quotationsHook={quotations} currentUser={currentUser} crm={crm} intent={intent} clearIntent={clearIntent} />}
           {active === "inventory" && <Inventory inventory={inventory} suppliersHook={suppliers} />}
           {active === "procurement" && <Procurement inventory={inventory} suppliersHook={suppliers} expensesHook={expenses} currentUser={currentUser} canManage={canManage} />}
           {active === "finance" && <Finance invoices={invoices} expensesHook={expenses} posTransactionsHook={posTransactions} employeesHook={employees} inventoryHook={inventory} currentUser={currentUser} intent={intent} clearIntent={clearIntent} company={company} />}
@@ -820,7 +820,7 @@ export function SmartManager() {
           {active === "ecommerce" && <ECommerce inventory={inventory} />}
           {active === "pos" && <POS inventory={inventory} transactionsHook={posTransactions} company={company} currentUser={currentUser} />}
           {active === "documents" && <Documents filesHook={files} company={company} />}
-          {active === "projects" && <Projects filesHook={files} expensesHook={expenses} />}
+          {active === "projects" && <Projects filesHook={files} expensesHook={expenses} company={company} />}
           {active === "support" && <CustomerSupport company={company} />}
           {active === "analytics" && (
             <Analytics

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import {  } from "lucide-react";
+import { Download, Package, PenTool } from "lucide-react";
 import { FormField, inputClass } from "../components/ui.jsx";
 import { signaturesSeed } from "../data/integrations.jsx";
 import { mapSignatureRow, useCompanyTable } from "../lib/mappers.jsx";

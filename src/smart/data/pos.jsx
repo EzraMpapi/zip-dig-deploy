@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingDown, TrendingUp } from "lucide-react";
 import { STAGE_COLOR } from "../data/core.jsx";
 import { DOC_STATUS_COLOR } from "../data/sales.jsx";
 

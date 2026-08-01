@@ -2,7 +2,7 @@ import { inputClass } from "./ui.jsx";
 import { printAsPDF } from "../lib/export.jsx";
 import { emailBus } from "../modules/Collaboration.jsx";
 import { useEffect, useState } from "react";
-import { Mail, MessageCircle, MessageSquare } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Mail, MessageCircle, MessageSquare, X } from "lucide-react";
 import { TOAST_DURATION, TOAST_STYLE } from "../components/ActivityStream.jsx";
 import { invoiceCreatedBus } from "../data/sales.jsx";
 import { confirmBus, logAudit, receiptBus, toastBus, waBus } from "../lib/buses.jsx";

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BadgeDollarSign, CalendarCheck, Clock, Landmark, Layers, Package, ShieldCheck, TrendingUp, Wallet } from "lucide-react";
+import { AlertCircle, BadgeDollarSign, Brain, CalendarCheck, CheckCircle2, Clock, Download, Gauge, Landmark, Layers, LoaderCircle, Package, Plus, Printer, ShieldCheck, Trash2, TrendingUp, Wallet, X } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie,
   PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis

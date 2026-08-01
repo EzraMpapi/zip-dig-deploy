@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Banknote, Bell, CalendarCheck, ClipboardList, Clock, GraduationCap, LayoutDashboard, Receipt, UserCircle, Users } from "lucide-react";
+import { AtSign, Banknote, Bell, CalendarCheck, ClipboardList, Clock, Fingerprint, GraduationCap, LayoutDashboard, LogIn, LogOut, MessageCircle, PhoneCall, Plus, Printer, Receipt, Search, Send, UserCircle, Users } from "lucide-react";
 import { inputClass } from "../components/ui.jsx";
 import { attendanceSeed, trainingSeed } from "../data/hr.jsx";
 import { logAudit } from "../lib/buses.jsx";

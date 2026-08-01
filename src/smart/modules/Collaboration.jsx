@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Calendar, FileText, Mail, MessageCircle, MessageSquare, Send, Star, Users, Edit3 } from "lucide-react";
+import { BookOpen, Calendar, Check, CheckCheck, CheckCircle2, ChevronLeft, ChevronRight, Circle, Edit3, ExternalLink, EyeOff, FileText, Hash, Inbox, Mail, MessageCircle, MessageSquare, Plus, Search, Send, Settings, Star, Trash2, Users, Video, X, Zap } from "lucide-react";
 import { EmptyState, FormField, inputClass } from "../components/ui.jsx";
 import {
   MEETING_TYPES,
@@ -756,7 +756,7 @@ export function EmailCenter({ currentUser, crm, employees, invoices, company }) 
                   {showCC?"Hide CC":"+ CC"}
                 </button>
                 {/* Contact autocomplete */}
-                {showCont && filteredContacts.length>0 && (
+                {showContacts && filteredContacts.length>0 && (
                   <div className="absolute top-full left-10 right-0 z-20 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto mt-1">
                     {filteredContacts.slice(0,8).map(ct=>(
                       <button key={ct.id} onMouseDown={()=>{setTo(ct.name+" <"+ct.email+">");setShowCont(false);setContQ("");}}

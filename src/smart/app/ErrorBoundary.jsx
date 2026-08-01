@@ -1,5 +1,5 @@
 import React from "react";
-import {  } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { SmartManager } from "../app/Shell.jsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { AppLock, GlobalStyles } from "../components/ui.jsx";

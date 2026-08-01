@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {  } from "lucide-react";
+import { SortAsc, SortDesc } from "lucide-react";
 
 // ── useSortableTable — adds sort + filter to any table ───────────────────────
 // Usage: const { sorted, sortCol, sortDir, doSort } = useSortableTable(rows)
