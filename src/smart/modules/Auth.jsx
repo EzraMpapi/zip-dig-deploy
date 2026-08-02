@@ -537,7 +537,7 @@ export function SignupPage({ onAuthenticated, onSwitchToLogin }) {
                 <div>
                   <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Your role</label>
                   <select className={inputClass} value={joinRole} onChange={(e) => setJoinRole(e.target.value)}>
-                    {ROLES.filter((r) => r !== "Organization Owner").map((r) => <option key={r}>{r}</option>)}
+                    {ROLES.filter((r) => r.id !== "Organization Owner").map((r) => <option key={r.id} value={r.id}>{r.id}</option>)}
                   </select>
                 </div>
                 {isPortalRole && <AuthTextField label="Customer or supplier reference" icon={Building2} value={customerRef} onChange={(e) => setCustomerRef(e.target.value)} placeholder="As it appears in the system" />}

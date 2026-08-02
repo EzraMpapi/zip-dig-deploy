@@ -12,6 +12,7 @@ import {
   TaxIntegration,
 } from "../modules/Finance.jsx";
 import { sendWebhookNotification } from "../modules/Notifications.jsx";
+import { ToggleSwitch } from "../modules/Settings.jsx";
 
 /* ══════════════ INTEGRATIONS ══════════════ */
 /* -------------------------------- INTEGRATIONS -------------------------------- */
