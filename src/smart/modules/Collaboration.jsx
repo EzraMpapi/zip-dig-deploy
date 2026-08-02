@@ -190,7 +190,8 @@ export function WhatsAppCenter({ currentUser, crm, employees, invoices, company 
       avatar: (l.company||l.contact||"?").charAt(0),
       type: "customer", raw: l,
     }));
-    const emps = (employees||[]).filter(e=>e.phone||e.email).map(e=>({
+    const empRows = Array.isArray(employees) ? employees : (employees?.rows || []);
+    const emps = empRows.filter(e=>e.phone||e.email).map(e=>({
       id: "emp-"+e.id, name: e.name, phone: e.phone||"", email: e.email||"",
       avatar: e.name.charAt(0), type: "employee", role: e.role,
     }));
