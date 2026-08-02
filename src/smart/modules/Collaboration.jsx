@@ -532,7 +532,8 @@ export function EmailCenter({ currentUser, crm, employees, invoices, company }) 
     const fromCrm = (crm?.rows||[]).filter(l=>l.email).map(l=>({
       id:"lead-"+l.id, name:l.company||l.contact||"", email:l.email||"", type:"customer",
     }));
-    const fromEmp = (employees||[]).filter(e=>e.email).map(e=>({
+    const empRows = Array.isArray(employees) ? employees : (employees?.rows || []);
+    const fromEmp = empRows.filter(e=>e.email).map(e=>({
       id:"emp-"+e.id, name:e.name, email:e.email||"", type:"employee", role:e.role,
     }));
     return [...fromCrm, ...fromEmp];
