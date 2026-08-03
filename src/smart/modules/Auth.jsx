@@ -718,103 +718,114 @@ export function OAuthCompanySetup({ oauthUser, onAuthenticated, onCancel }) {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#F8FAFC] p-4 py-10" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-6">
-          <div className="mb-3 flex justify-center"><BrandMark size={64} textSize={26} /></div>
-          <h1 className="text-[22px] font-bold tracking-tight" style={{ fontFamily: "'Poppins'" }}>
-            <span className="text-[#111827]">SMART</span> <span className="text-[#16A34A]">MANAGER</span>
-          </h1>
+    <div className="es-auth" style={{ alignItems: "flex-start", justifyContent: "center", padding: "var(--space-lg)" }}>
+      <div className="w-full" style={{ maxWidth: 560, paddingTop: "var(--space-lg)" }}>
+        <div className="flex flex-col items-center" style={{ gap: "var(--space-sm)", marginBottom: "var(--space-lg)" }}>
+          <BrandMark size={56} textSize={24} />
+          <p className="es-title es-title--sm">BusinessSphere</p>
+          <p className="es-eyebrow">Intelligent Business Operations</p>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg border border-slate-200/60 p-6 sm:p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="es-card es-card--elevated es-stack-lg">
           <div>
-            <h2 className="text-[18px] font-semibold text-[#111827] mb-1">One more step, {fullName.split(" ")[0] || "there"}</h2>
-            <p className="text-[13px] text-slate-500">Signed in as {oauthUser.email} — now set up your organization.</p>
+            <h2 className="es-title es-title--sm">One more step, {fullName.split(" ")[0] || "there"}</h2>
+            <p className="es-subtitle" style={{ fontSize: "var(--text-sm)" }}>Signed in as {oauthUser.email} — now set up your organization.</p>
           </div>
 
-          <FormField label="Your name" required><input className={inputClass} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" /></FormField>
+          <div>
+            <label htmlFor="oauth-name" className="es-label">Your name *</label>
+            <input id="oauth-name" className="es-input" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" />
+          </div>
 
-          <div className="flex gap-2 bg-slate-100 rounded-lg p-1">
-            <button type="button" onClick={() => setMode("create")} className={`flex-1 text-[12.5px] font-medium py-2 rounded-md transition-colors ${mode === "create" ? "bg-white text-[#111827] shadow-sm" : "text-slate-500"}`}>Create a company</button>
-            <button type="button" onClick={() => setMode("join")} className={`flex-1 text-[12.5px] font-medium py-2 rounded-md transition-colors ${mode === "join" ? "bg-white text-[#111827] shadow-sm" : "text-slate-500"}`}>Join a company</button>
+          <div className="es-segmented" role="tablist" aria-label="Setup path">
+            <button type="button" role="tab" aria-selected={mode === "create"} className="es-segmented__item" onClick={() => setMode("create")}>Create a company</button>
+            <button type="button" role="tab" aria-selected={mode === "join"} className="es-segmented__item" onClick={() => setMode("join")}>Join a company</button>
           </div>
 
           {mode === "create" ? (
-            <div className="space-y-4">
-              <FormField label="Organization name" required><input className={inputClass} value={company.name} onChange={(e) => setCompanyField("name", e.target.value)} placeholder="e.g. BEIRAHISI HARDWARE" /></FormField>
+            <div className="es-stack">
+              <div>
+                <label htmlFor="oauth-company" className="es-label">Organization name *</label>
+                <input id="oauth-company" className="es-input" value={company.name} onChange={(e) => setCompanyField("name", e.target.value)} placeholder="e.g. BEIRAHISI HARDWARE" />
+              </div>
               <FormField label="Business type">
                 <CategoryPicker value={company.category} onChange={(v) => setCompanyField("category", v)} />
               </FormField>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Country">
-                  <select className={inputClass} value={company.country} onChange={(e) => setCompanyField("country", e.target.value)}>
+              <div className="es-grid-2">
+                <div>
+                  <label htmlFor="oauth-country" className="es-label">Country</label>
+                  <select id="oauth-country" className="es-select" value={company.country} onChange={(e) => setCompanyField("country", e.target.value)}>
                     {SIGNUP_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
-                </FormField>
-                <FormField label="Currency">
-                  <select className={inputClass} value={company.currency} onChange={(e) => setCompanyField("currency", e.target.value)}>
+                </div>
+                <div>
+                  <label htmlFor="oauth-currency" className="es-label">Currency</label>
+                  <select id="oauth-currency" className="es-select" value={company.currency} onChange={(e) => setCompanyField("currency", e.target.value)}>
                     {SIGNUP_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
-                </FormField>
+                </div>
               </div>
               <div>
-                <label className="text-[12.5px] font-medium text-slate-600 block mb-2">Business scale</label>
-                <div className="grid grid-cols-2 gap-2">
+                <span className="es-label">Business scale</span>
+                <div className="es-grid-2">
                   {[{ id: "small", label: "Small Business", hint: "One location, lean team" }, { id: "large", label: "Large Business", hint: "Multiple departments" }].map((s) => (
                     <button
-                      key={s.id} type="button"
+                      key={s.id} type="button" className="es-option" aria-pressed={businessScale === s.id}
                       onClick={() => { setBusinessScale(s.id); setSelectedModules(new Set(s.id === "small" ? getIndustryProfile(company.category).recommendedModules : SCALE_MODULE_PRESETS.large)); }}
-                      className={`text-left rounded-xl border px-3.5 py-2.5 transition-colors ${businessScale === s.id ? "border-[#16A34A]/50" : "border-slate-200 hover:border-slate-300"}`}
-                      style={businessScale === s.id ? { backgroundColor: "#DCFCE7" } : undefined}
                     >
-                      <p className={`text-[12.5px] font-medium ${businessScale === s.id ? "text-[#111827]" : "text-slate-600"}`}>{s.label}</p>
-                      <p className="text-[10.5px] text-slate-400">{s.hint}</p>
+                      <span className="es-option__title">{s.label}</span>
+                      <span className="es-option__hint">{s.hint}</span>
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5">Sets a sensible starting set of modules below — nothing is locked away either way.</p>
+                <p className="es-help">Sets a sensible starting set of modules below — nothing is locked away either way.</p>
               </div>
               <div>
-                <label className="text-[12.5px] font-medium text-slate-600 block mb-2">Select modules to use</label>
-                <div className="grid grid-cols-3 gap-2">
+                <span className="es-label">Select modules to use</span>
+                <div className="es-grid-3">
                   {ONBOARDING_MODULES.map((m) => {
                     const Icon = m.icon;
                     const on = selectedModules.has(m.id);
                     return (
-                      <button key={m.id} type="button" onClick={() => toggleModule(m.id)} className={`flex flex-col items-center gap-1 rounded-lg border py-2.5 px-1 transition-colors ${on ? "border-[#16A34A]/40 bg-[#16A34A]/5" : "border-slate-200"}`}>
-                        <Icon size={15} className={on ? "text-[#16A34A]" : "text-slate-400"} />
-                        <span className={`text-[10.5px] font-medium text-center leading-tight ${on ? "text-[#111827]" : "text-slate-400"}`}>{m.label}</span>
+                      <button key={m.id} type="button" onClick={() => toggleModule(m.id)} className="es-tile" aria-pressed={on}>
+                        <Icon size={16} style={{ color: on ? "var(--accent-gold)" : "var(--text-tertiary)" }} aria-hidden="true" />
+                        <span>{m.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-              <FormField label="Your first branch or location (optional)">
-                <input className={inputClass} value={firstBranch} onChange={(e) => setFirstBranch(e.target.value)} placeholder="e.g. Kariakoo Branch — defaults to Head Office" />
-              </FormField>
+              <div>
+                <label htmlFor="oauth-branch" className="es-label">Your first branch or location (optional)</label>
+                <input id="oauth-branch" className="es-input" value={firstBranch} onChange={(e) => setFirstBranch(e.target.value)} placeholder="e.g. Kariakoo Branch — defaults to Head Office" />
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <FormField label="Company join code" required><input className={inputClass} value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} placeholder="e.g. A1B2C3D4" /></FormField>
-              <FormField label="Your role">
-                <select className={inputClass} value={joinRole} onChange={(e) => setJoinRole(e.target.value)}>
+            <div className="es-stack">
+              <div>
+                <label htmlFor="oauth-join" className="es-label">Company join code *</label>
+                <input id="oauth-join" className="es-input" value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} placeholder="e.g. A1B2C3D4" />
+              </div>
+              <div>
+                <label htmlFor="oauth-role" className="es-label">Your role</label>
+                <select id="oauth-role" className="es-select" value={joinRole} onChange={(e) => setJoinRole(e.target.value)}>
                   {ROLES.map((r) => <option key={r.id} value={r.id}>{r.id}</option>)}
                 </select>
-              </FormField>
+              </div>
               {isPortalRole && (
-                <FormField label="Your company name, exactly as it appears on your records" required>
-                  <input className={inputClass} value={customerRef} onChange={(e) => setCustomerRef(e.target.value)} placeholder="e.g. Kilimo Fresh Distributors" />
-                </FormField>
+                <div>
+                  <label htmlFor="oauth-ref" className="es-label">Your company name, exactly as it appears on your records *</label>
+                  <input id="oauth-ref" className="es-input" value={customerRef} onChange={(e) => setCustomerRef(e.target.value)} placeholder="e.g. Kilimo Fresh Distributors" />
+                </div>
               )}
             </div>
           )}
 
-          {error && <p className="text-[12.5px] text-[#EF4444] rounded-lg px-3 py-2" style={{ backgroundColor: "#FEE2E2" }}>{error}</p>}
+          {error && <div className="es-alert" role="alert"><AlertCircle size={14} className="shrink-0" style={{ marginTop: 2 }} /><span>{error}</span></div>}
 
-          <div className="flex gap-2">
-            <button type="button" onClick={onCancel} className="btn-secondary flex-1 text-[13px] font-medium rounded-lg py-3">Cancel</button>
-            <button type="submit" disabled={!valid || busy} aria-label="Finish setup" className="flex-[2] btn-primary text-white text-[14px] font-semibold rounded-lg py-3 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-              {busy ? <LoaderCircle size={16} className="animate-spin" /> : "Finish Setup"}
+          <div className="flex" style={{ gap: "var(--space-sm)" }}>
+            <button type="button" onClick={onCancel} className="es-btn es-btn--secondary" style={{ flex: 1 }}>Cancel</button>
+            <button type="submit" disabled={!valid || busy} aria-label="Finish setup" className="es-btn es-btn--primary es-btn--lg" style={{ flex: 2 }}>
+              {busy ? <><span className="es-spinner" aria-hidden="true" /><span className="es-sr-only">Finishing setup</span></> : "Finish setup"}
             </button>
           </div>
         </form>
@@ -822,3 +833,4 @@ export function OAuthCompanySetup({ oauthUser, onAuthenticated, onCancel }) {
     </div>
   );
 }
+
