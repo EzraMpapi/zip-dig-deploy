@@ -467,185 +467,189 @@ export function SignupPage({ onAuthenticated, onSwitchToLogin }) {
     ? ["Account", "Company"]
     : ["Join"];
 
-  const gradientBg = "linear-gradient(160deg, #052614 0%, #0F4D26 35%, #16A34A 70%, #22C55E 100%)";
+  // Step state for the token-driven stepper: "done" | "active" | "todo".
+  function stepState(i) {
+    if (step > i + 1) return "done";
+    if (step === i + 1) return "active";
+    return "todo";
+  }
 
   return (
-    <div className="min-h-screen w-full flex" style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
-      {/* Left brand panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] relative overflow-hidden p-12" style={{ background: gradientBg }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-96 h-96 rounded-full opacity-20" style={{ background: "radial-gradient(circle,#4ADE80 0%,transparent 70%)", top: "-100px", right: "-80px", filter: "blur(70px)" }} />
-          <div className="absolute w-64 h-64 rounded-full opacity-15" style={{ background: "radial-gradient(circle,#BBF7D0 0%,transparent 70%)", bottom: "5%", left: "10%", filter: "blur(50px)" }} />
-          <svg className="absolute opacity-8" style={{ bottom: "15%", right: "5%", width: 180, height: 208 }} viewBox="0 0 120 140">
-            <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="none" stroke="#4ADE80" strokeWidth="1.5" />
-          </svg>
-        </div>
+    <div className="es-auth">
+      {/* Left — brand panel */}
+      <aside className="es-auth__brand">
+        <div className="es-auth__pattern" aria-hidden="true" />
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <svg width="40" height="46" viewBox="0 0 120 140">
-              <defs><linearGradient id="slg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ADE80"/><stop offset="100%" stopColor="#16A34A"/></linearGradient></defs>
-              <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="url(#slg)"/>
-              <text x="60" y="76" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="52" fontWeight="900" fontFamily="Poppins,sans-serif">S</text>
-            </svg>
+          <div className="flex items-center gap-3" style={{ marginBottom: "var(--space-3xl)" }}>
+            <BrandMark size={40} textSize={18} />
             <div>
-              <p className="text-white font-bold text-[18px] leading-tight" style={{ fontFamily: "Poppins,sans-serif" }}>Smart Manager</p>
-              <p className="text-white/50 text-[11px] tracking-wide uppercase">Enterprise Edition</p>
+              <p className="es-title es-title--sm">BusinessSphere</p>
+              <p className="es-eyebrow">Intelligent Business Operations</p>
             </div>
           </div>
-          <h2 className="text-[34px] font-bold text-white leading-tight mb-4" style={{ fontFamily: "Poppins,sans-serif" }}>Start managing your business the smart way</h2>
-          <p className="text-white/65 text-[14px] leading-relaxed mb-8">Set up in minutes. Everything from sales to tax, payroll, and AI insights — ready on day one.</p>
-          <div className="space-y-3">
-            {["Free to get started","No credit card required","Tanzania-first, Africa-ready","AI-powered from day one"].map((f) => (
-              <div key={f} className="flex items-center gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center shrink-0"><CheckCircle2 size={12} className="text-[#4ADE80]" /></div>
-                <p className="text-white/80 text-[13px]">{f}</p>
+          <h2 className="es-title" style={{ fontSize: "var(--text-4xl)", maxWidth: 420 }}>Set up your workspace in minutes.</h2>
+          <p className="es-subtitle" style={{ maxWidth: 420 }}>Everything from sales to tax, payroll and AI insight — ready on day one.</p>
+          <div className="es-stack-sm" style={{ marginTop: "var(--space-xl)" }}>
+            {["Free to get started", "No credit card required", "Tanzania-first, Africa-ready", "AI-powered from day one"].map((f) => (
+              <div key={f} className="es-feature">
+                <span className="es-feature__dot" aria-hidden="true"><CheckCircle2 size={12} /></span>
+                <p className="es-feature__title">{f}</p>
               </div>
             ))}
           </div>
         </div>
-        <p className="relative z-10 text-white/30 text-[11px]">© {new Date().getFullYear()} Smart Manager · Enterprise Business Ecosystem</p>
-      </div>
+        <p className="relative z-10 es-meta">v2.1.0 · © {new Date().getFullYear()} BusinessSphere</p>
+      </aside>
 
       {/* Right — the stepped form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-[#F8FAFC] overflow-y-auto">
-        <div className="w-full max-w-md py-6">
-
-          {/* Mobile brand */}
-          <div className="flex lg:hidden flex-col items-center mb-7">
-            <svg width="44" height="51" viewBox="0 0 120 140" className="mb-2">
-              <defs><linearGradient id="mslg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ADE80"/><stop offset="100%" stopColor="#16A34A"/></linearGradient></defs>
-              <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="url(#mslg)"/>
-              <text x="60" y="76" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="52" fontWeight="900" fontFamily="Poppins,sans-serif">S</text>
-            </svg>
-            <p className="font-bold text-[#111827] text-[18px]" style={{ fontFamily: "Poppins,sans-serif" }}>Smart Manager</p>
+      <main className="es-auth__form-pane" style={{ alignItems: "flex-start" }}>
+        <div className="es-auth__form" style={{ paddingTop: "var(--space-lg)", paddingBottom: "var(--space-lg)" }}>
+          <div className="es-auth__brand-strip" style={{ borderRadius: "var(--radius-lg)", marginBottom: "var(--space-lg)" }}>
+            <BrandMark size={44} textSize={20} />
+            <p className="es-title es-title--sm">BusinessSphere</p>
           </div>
 
           {/* Mode switcher */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1 mb-6">
-            {["create","join"].map((m) => (
-              <button key={m} onClick={() => { setMode(m); setStep(1); setError(null); }}
-                className={`flex-1 py-2.5 rounded-lg text-[13px] font-medium transition-all ${mode === m ? "bg-white text-[#111827] shadow-sm" : "text-slate-500"}`}>
-                {m === "create" ? "🏢 Create company" : "🔑 Join with code"}
+          <div className="es-segmented" role="tablist" aria-label="Signup path" style={{ marginBottom: "var(--space-lg)" }}>
+            {["create", "join"].map((m) => (
+              <button key={m} type="button" role="tab" aria-selected={mode === m} className="es-segmented__item"
+                onClick={() => { setMode(m); setStep(1); setError(null); }}>
+                {m === "create" ? "Create company" : "Join with code"}
               </button>
             ))}
           </div>
 
-          {/* Progress */}
+          {/* Stepper */}
           {totalSteps > 1 && (
-            <div className="flex items-center gap-2 mb-6">
-              {Array.from({length: totalSteps}, (_, i) => (
-                <div key={i} className="flex items-center gap-2 flex-1">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0"
-                    style={{ backgroundColor: (step > i + 1) ? "#16A34A" : step === i + 1 ? "#16A34A" : "#E5E7EB", color: (step >= i + 1) ? "white" : "#9CA3AF" }}>
-                    {(step > i + 1) ? <CheckCircle2 size={12}/> : i + 1}
+            <div className="es-stepper" style={{ marginBottom: "var(--space-lg)" }} aria-label={`Step ${step} of ${totalSteps}`}>
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div key={i} className="flex items-start" style={{ flex: i < totalSteps - 1 ? 1 : "0 0 auto" }}>
+                  <div className="es-stepper__step" data-state={stepState(i)}>
+                    <button type="button" className="es-stepper__dot" disabled={step <= i + 1}
+                      onClick={() => { if (step > i + 1) setStep(i + 1); }}
+                      aria-label={`Step ${i + 1}: ${stepLabels[i]}`}>
+                      {step > i + 1 ? <CheckCircle2 size={13} /> : i + 1}
+                    </button>
+                    <span className="es-stepper__label">{stepLabels[i]}</span>
                   </div>
-                  <p className={`text-[11.5px] font-medium ${step === i + 1 ? "text-[#111827]" : "text-slate-400"}`}>{stepLabels[i]}</p>
-                  {i < totalSteps - 1 && <div className="flex-1 h-px" style={{ backgroundColor: (step > i + 1) ? "#16A34A" : "#E5E7EB" }} />}
+                  {i < totalSteps - 1 && <div className="es-stepper__line" data-state={step > i + 1 ? "done" : "todo"} />}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-200/60 p-6 sm:p-8">
-            {error && <div className="mb-5 flex items-start gap-2 px-3.5 py-3 rounded-xl bg-red-50 border border-red-100 text-[12.5px] text-red-700"><AlertCircle size={13} className="shrink-0 mt-0.5"/><span>{error}</span></div>}
+          <div className="es-card es-card--elevated">
+            {error && (
+              <div className="es-alert" role="alert" style={{ marginBottom: "var(--space-md)" }}>
+                <AlertCircle size={14} className="shrink-0" style={{ marginTop: 2 }} /><span>{error}</span>
+              </div>
+            )}
 
             {/* JOIN mode */}
             {mode === "join" && (
-              <div className="space-y-4">
-                <div><h2 className="text-[20px] font-bold text-[#111827]" style={{ fontFamily: "Poppins,sans-serif" }}>Join your company</h2><p className="text-[13px] text-slate-500 mt-0.5">Enter the code your admin shared with you</p></div>
-                <AuthTextField label="Full name" icon={User} value={account.fullName} onChange={(e) => setAccountField("fullName", e.target.value)} placeholder="Your full name" />
-                <AuthTextField label="Email address" icon={Mail} type="email" value={account.email} onChange={(e) => setAccountField("email", e.target.value)} placeholder="you@company.tz" />
-                <AuthTextField label="Password" icon={Lock} type={showPassword ? "text" : "password"} value={account.password} onChange={(e) => setAccountField("password", e.target.value)} placeholder="Min. 6 characters" />
+              <div className="es-stack">
+                <div>
+                  <h2 className="es-title es-title--sm">Join your company</h2>
+                  <p className="es-subtitle" style={{ fontSize: "var(--text-sm)" }}>Enter the code your admin shared with you</p>
+                </div>
+                <AuthTextField label="Full name" icon={User} value={account.fullName} onChange={(e) => setAccountField("fullName", e.target.value)} placeholder="Your full name" autoComplete="name" />
+                <AuthTextField label="Email address" icon={Mail} type="email" value={account.email} onChange={(e) => setAccountField("email", e.target.value)} placeholder="you@company.tz" autoComplete="email" />
+                <AuthTextField label="Password" icon={Lock} type={showPassword ? "text" : "password"} value={account.password} onChange={(e) => setAccountField("password", e.target.value)} placeholder="Min. 6 characters" autoComplete="new-password" />
                 <AuthTextField label="Join code" icon={Lock} value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="e.g. a3f9b2" />
                 <div>
-                  <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Your role</label>
-                  <select className={inputClass} value={joinRole} onChange={(e) => setJoinRole(e.target.value)}>
+                  <label htmlFor="join-role" className="es-label">Your role</label>
+                  <select id="join-role" className="es-select" value={joinRole} onChange={(e) => setJoinRole(e.target.value)}>
                     {ROLES.filter((r) => r.id !== "Organization Owner").map((r) => <option key={r.id} value={r.id}>{r.id}</option>)}
                   </select>
                 </div>
                 {isPortalRole && <AuthTextField label="Customer or supplier reference" icon={Building2} value={customerRef} onChange={(e) => setCustomerRef(e.target.value)} placeholder="As it appears in the system" />}
                 <button onClick={handleFinalSubmit} disabled={busy || !account.fullName.trim() || !account.email.trim() || !account.password || !joinCode.trim()}
-                  className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white disabled:opacity-50 transition-all"
-                  style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}>
-                  {busy ? "Joining…" : "Join company"}
+                  className="es-btn es-btn--primary es-btn--block es-btn--lg">
+                  {busy ? <><span className="es-spinner" aria-hidden="true" /><span className="es-sr-only">Joining</span></> : "Join company"}
                 </button>
               </div>
             )}
 
             {/* CREATE mode — Step 1: Account */}
             {mode === "create" && step === 1 && (
-              <div className="space-y-4">
-                <div><h2 className="text-[20px] font-bold text-[#111827]" style={{ fontFamily: "Poppins,sans-serif" }}>Create your account</h2><p className="text-[13px] text-slate-500 mt-0.5">Step 1 of 2 — personal details</p></div>
-                <AuthTextField label="Full name" icon={User} value={account.fullName} onChange={(e) => setAccountField("fullName", e.target.value)} placeholder="Your full name" />
-                <AuthTextField label="Email address" icon={Mail} type="email" value={account.email} onChange={(e) => setAccountField("email", e.target.value)} placeholder="you@company.tz" />
+              <div className="es-stack">
                 <div>
-                  <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={account.password} onChange={(e) => setAccountField("password", e.target.value)} placeholder="Min. 6 characters"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 pr-11 text-[13.5px] text-[#111827] placeholder-slate-300 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {showPassword ? <EyeOff size={14}/> : <Eye size={14}/>}
+                  <h2 className="es-title es-title--sm">Create your account</h2>
+                  <p className="es-subtitle" style={{ fontSize: "var(--text-sm)" }}>Step 1 of 2 — personal details</p>
+                </div>
+                <AuthTextField label="Full name" icon={User} value={account.fullName} onChange={(e) => setAccountField("fullName", e.target.value)} placeholder="Your full name" autoComplete="name" />
+                <AuthTextField label="Email address" icon={Mail} type="email" value={account.email} onChange={(e) => setAccountField("email", e.target.value)} placeholder="you@company.tz" autoComplete="email" />
+                <div>
+                  <label htmlFor="signup-password" className="es-label">Password</label>
+                  <div className="es-field es-field--icon es-field--icon-suffix">
+                    <span className="es-field__icon" aria-hidden="true"><Lock size={15} /></span>
+                    <input id="signup-password" type={showPassword ? "text" : "password"} value={account.password} autoComplete="new-password"
+                      onChange={(e) => setAccountField("password", e.target.value)} placeholder="Min. 6 characters" className="es-input" />
+                    <button type="button" className="es-field__suffix" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
                 </div>
-                <AuthTextField label="Confirm password" icon={Lock} type="password" value={account.confirmPassword} onChange={(e) => setAccountField("confirmPassword", e.target.value)} placeholder="Repeat password" />
+                <AuthTextField label="Confirm password" icon={Lock} type="password" value={account.confirmPassword} onChange={(e) => setAccountField("confirmPassword", e.target.value)} placeholder="Repeat password" autoComplete="new-password"
+                  invalid={!!(account.password && account.confirmPassword && account.password !== account.confirmPassword)} />
                 {account.password && account.confirmPassword && account.password !== account.confirmPassword && (
-                  <p className="text-[11.5px] text-red-500 flex items-center gap-1"><AlertCircle size={11}/> Passwords don&apos;t match</p>
+                  <p className="es-error-text"><AlertCircle size={12} /> Passwords don&apos;t match</p>
                 )}
-                <button onClick={() => { if (step1Valid) setStep(2); }} disabled={!step1Valid}
-                  className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white disabled:opacity-50 transition-all"
-                  style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}>
-                  Continue →
+                <button onClick={() => { if (step1Valid) setStep(2); }} disabled={!step1Valid} className="es-btn es-btn--primary es-btn--block es-btn--lg">
+                  Continue
                 </button>
               </div>
             )}
 
             {/* CREATE mode — Step 2: Company */}
             {mode === "create" && step === 2 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <button onClick={() => setStep(1)} className="text-slate-400 hover:text-slate-600"><ChevronLeft size={18}/></button>
-                  <div><h2 className="text-[20px] font-bold text-[#111827]" style={{ fontFamily: "Poppins,sans-serif" }}>Your company</h2><p className="text-[13px] text-slate-500">Step 2 of 2 — business details</p></div>
+              <div className="es-stack">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setStep(1)} className="es-field__suffix" style={{ position: "static", transform: "none" }} aria-label="Back to account details"><ChevronLeft size={18} /></button>
+                  <div>
+                    <h2 className="es-title es-title--sm">Your company</h2>
+                    <p className="es-subtitle" style={{ fontSize: "var(--text-sm)" }}>Step 2 of 2 — business details</p>
+                  </div>
                 </div>
                 <AuthTextField label="Company name *" icon={Building2} value={company.name} onChange={(e) => setCompanyField("name", e.target.value)} placeholder="e.g. Kilimanjaro Traders Ltd" />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="es-grid-2">
                   <div>
-                    <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Country</label>
-                    <select className={inputClass} value={company.country} onChange={(e) => setCompanyField("country", e.target.value)}>
+                    <label htmlFor="signup-country" className="es-label">Country</label>
+                    <select id="signup-country" className="es-select" value={company.country} onChange={(e) => setCompanyField("country", e.target.value)}>
                       {SIGNUP_COUNTRIES.map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Currency</label>
-                    <select className={inputClass} value={company.currency} onChange={(e) => setCompanyField("currency", e.target.value)}>
+                    <label htmlFor="signup-currency" className="es-label">Currency</label>
+                    <select id="signup-currency" className="es-select" value={company.currency} onChange={(e) => setCompanyField("currency", e.target.value)}>
                       {SIGNUP_CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Industry</label>
-                  <select className={inputClass} value={company.category} onChange={(e) => setCompanyField("category", e.target.value)}>
+                  <label htmlFor="signup-industry" className="es-label">Industry</label>
+                  <select id="signup-industry" className="es-select" value={company.category} onChange={(e) => setCompanyField("category", e.target.value)}>
                     {COMPANY_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <AuthTextField label="First branch name" icon={Building2} value={firstBranch} onChange={(e) => setFirstBranch(e.target.value)} placeholder="Head Office" />
-                <button onClick={handleFinalSubmit} disabled={busy || !company.name.trim()}
-                  className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white disabled:opacity-50 transition-all"
-                  style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}>
-                  {busy ? "Creating your account…" : "Launch Smart Manager 🚀"}
+                <button onClick={handleFinalSubmit} disabled={busy || !company.name.trim()} className="es-btn es-btn--primary es-btn--block es-btn--lg">
+                  {busy ? <><span className="es-spinner" aria-hidden="true" /><span className="es-sr-only">Creating your workspace</span></> : "Create workspace"}
                 </button>
+                <p className="es-meta" style={{ textAlign: "center" }}>Estimated setup time: ~30 seconds</p>
               </div>
             )}
           </div>
 
-          <p className="text-center text-[12.5px] text-slate-500 mt-5">
-            Already have an account? <button type="button" onClick={onSwitchToLogin} className="font-semibold text-[#16A34A] hover:underline">Sign in</button>
+          <p className="es-meta" style={{ textAlign: "center", marginTop: "var(--space-md)" }}>
+            Already have an account? <button type="button" onClick={onSwitchToLogin} className="es-link">Sign in</button>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
+
 
 // Completes setup for a real OAuth session (Google/Microsoft/Apple) that
 // authenticated correctly but has no company yet — the identity is
