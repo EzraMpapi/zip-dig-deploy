@@ -164,17 +164,20 @@ export const SCALE_MODULE_PRESETS = {
   large: ONBOARDING_MODULES.map((m) => m.id),
 };
 
-export function AuthTextField({ label, icon: Icon, type = "text", value, onChange, placeholder, rightSlot }) {
+/* ── Presentation primitives (Phase 1B) ──────────────────────────────────
+   Token-driven field used by every auth screen. Behaviour, props and the
+   value/onChange contract are unchanged from the previous version. */
+export function AuthTextField({ label, icon: Icon, type = "text", value, onChange, placeholder, rightSlot, autoComplete, invalid, id }) {
+  const fieldId = id || `f-${label ? label.replace(/[^a-z0-9]+/gi, "-").toLowerCase() : type}`;
   return (
     <div>
-      {label && <label className="text-[12.5px] font-medium text-slate-600 block mb-1.5">{label}</label>}
-      <div className="relative">
-        <div className="absolute left-1 top-1 bottom-1 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#DCFCE7" }}>
-          <Icon size={15} className="text-[#16A34A]" />
-        </div>
+      {label && <label htmlFor={fieldId} className="es-label">{label}</label>}
+      <div className={`es-field ${Icon ? "es-field--icon" : ""} ${rightSlot ? "es-field--icon-suffix" : ""}`}>
+        {Icon && <span className="es-field__icon" aria-hidden="true"><Icon size={15} /></span>}
         <input
-          type={type} value={value} onChange={onChange} placeholder={placeholder}
-          className={`w-full bg-white border border-slate-200 rounded-lg pl-12 py-2.5 text-[13.5px] outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all ${rightSlot ? "pr-10" : "pr-3"}`}
+          id={fieldId} type={type} value={value} onChange={onChange} placeholder={placeholder}
+          autoComplete={autoComplete} aria-invalid={invalid ? "true" : undefined}
+          className="es-input"
         />
         {rightSlot}
       </div>
@@ -182,14 +185,29 @@ export function AuthTextField({ label, icon: Icon, type = "text", value, onChang
   );
 }
 
+// Apple's mark as inline SVG, matching the Google/Microsoft glyphs below.
+export function AppleGlyph({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#F1F3F9" className="shrink-0" aria-hidden="true">
+      <path d="M16.36 12.79c.02 2.5 2.19 3.33 2.22 3.34-.02.06-.35 1.2-1.15 2.37-.7 1.02-1.42 2.04-2.57 2.06-1.12.02-1.49-.66-2.77-.66-1.29 0-1.69.64-2.76.68-1.1.04-1.94-1.1-2.65-2.11-1.53-2.21-2.7-6.25-1.13-8.98.78-1.36 2.17-2.22 3.68-2.24 1.09-.02 2.11.72 2.77.72.66 0 1.9-.89 3.2-.76.55.02 2.09.2 3.08 1.5-.08.05-1.84 1.07-1.82 3.18M14.4 4.5c.59-.71 1-1.7.89-2.7-.87.04-1.92.58-2.53 1.29-.55.63-1.02 1.64-.89 2.6.97.08 1.94-.49 2.53-1.19" />
+    </svg>
+  );
+}
+
+const LOGIN_TABS = [
+  { id: "email", label: "Email", type: "email", inputLabel: "Email address", placeholder: "you@company.com", icon: Mail, autoComplete: "email" },
+  { id: "phone", label: "Phone", type: "tel", inputLabel: "Phone number", placeholder: "+255 700 000 000", icon: User, autoComplete: "tel" },
+  { id: "sso", label: "SSO", type: "email", inputLabel: "Work email", placeholder: "you@company.com", icon: Building2, autoComplete: "email" },
+];
+
 export function LoginPage({ onAuthenticated, onSwitchToSignup }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [tiltX, setTiltX] = useState(0);
-  const [tiltY, setTiltY] = useState(0);
+  const [method, setMethod] = useState("email");
+  const tab = LOGIN_TABS.find((t) => t.id === method) || LOGIN_TABS[0];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -204,112 +222,117 @@ export function LoginPage({ onAuthenticated, onSwitchToSignup }) {
     finally { setBusy(false); }
   }
 
-  function handleMouseMove(e) {
-    const r = e.currentTarget.getBoundingClientRect();
-    setTiltX(-((e.clientY - r.top - r.height / 2) / (r.height / 2)) * 7);
-    setTiltY(((e.clientX - r.left - r.width / 2) / (r.width / 2)) * 7);
-  }
-
   return (
-    <div className="min-h-screen w-full flex" style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
-      {/* Left — brand panel, hidden on small screens */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] relative overflow-hidden p-12" style={{ background: "linear-gradient(160deg, #052614 0%, #0F4D26 35%, #16A34A 70%, #22C55E 100%)" }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-96 h-96 rounded-full opacity-20" style={{ background: "radial-gradient(circle, #4ADE80 0%, transparent 70%)", top: "-100px", right: "-80px", filter: "blur(70px)" }} />
-          <div className="absolute w-64 h-64 rounded-full opacity-15" style={{ background: "radial-gradient(circle, #BBF7D0 0%, transparent 70%)", bottom: "5%", left: "10%", filter: "blur(50px)" }} />
-          <svg className="absolute opacity-8" style={{ bottom: "15%", right: "5%", width: 180, height: 208 }} viewBox="0 0 120 140">
-            <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="none" stroke="#4ADE80" strokeWidth="1.5" />
-          </svg>
-          <svg className="absolute opacity-6" style={{ top: "5%", left: "5%", width: 80, height: 92 }} viewBox="0 0 120 140">
-            <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="none" stroke="#86EFAC" strokeWidth="2" />
-          </svg>
-        </div>
+    <div className="es-auth">
+      {/* Left — brand panel (desktop and wide only) */}
+      <aside className="es-auth__brand">
+        <div className="es-auth__pattern" aria-hidden="true" />
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <svg width="40" height="46" viewBox="0 0 120 140">
-              <defs><linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ADE80"/><stop offset="100%" stopColor="#16A34A"/></linearGradient></defs>
-              <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="url(#lg1)"/>
-              <text x="60" y="76" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="52" fontWeight="900" fontFamily="Poppins,sans-serif">S</text>
-            </svg>
+          <div className="flex items-center gap-3" style={{ marginBottom: "var(--space-3xl)" }}>
+            <BrandMark size={40} textSize={18} />
             <div>
-              <p className="text-white font-bold text-[18px] leading-tight" style={{ fontFamily: "Poppins,sans-serif" }}>Smart Manager</p>
-              <p className="text-white/50 text-[11px] tracking-wide uppercase">Enterprise Edition</p>
+              <p className="es-title es-title--sm">BusinessSphere</p>
+              <p className="es-eyebrow">Intelligent Business Operations</p>
             </div>
           </div>
-          <h2 className="text-[36px] font-bold text-white leading-tight mb-4" style={{ fontFamily: "Poppins,sans-serif" }}>Africa&apos;s first AI-powered Business Ecosystem</h2>
-          <p className="text-white/65 text-[14px] leading-relaxed">Manage every aspect of your organisation — from sales and inventory to HR, tax, and AI insights — in one place.</p>
+          <h2 className="es-title" style={{ fontSize: "var(--text-4xl)", maxWidth: 420 }}>
+            One operating system for every part of your business.
+          </h2>
+          <p className="es-subtitle" style={{ maxWidth: 420 }}>
+            Sales, inventory, finance, people and AI insight — in a single, auditable workspace.
+          </p>
         </div>
-        <div className="relative z-10 space-y-3">
-          {[["TRA Tax Center", "PAYE, SDL, WCF with real brackets"],["Biometric Attendance", "Real fingerprint via WebAuthn"],["AI Command Center", "English & Kiswahili, live business data"]].map(([t,s]) => (
-            <div key={t} className="flex items-start gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center shrink-0 mt-0.5"><CheckCircle2 size={12} className="text-[#4ADE80]" /></div>
-              <div><p className="text-white text-[13px] font-medium">{t}</p><p className="text-white/50 text-[11.5px]">{s}</p></div>
+        <div className="relative z-10 es-stack">
+          {[["TRA Tax Center", "PAYE, SDL, WCF with real brackets"], ["Biometric Attendance", "Real fingerprint via WebAuthn"], ["AI Command Center", "English & Kiswahili, live business data"]].map(([t, s]) => (
+            <div key={t} className="es-feature">
+              <span className="es-feature__dot" aria-hidden="true"><CheckCircle2 size={12} /></span>
+              <div><p className="es-feature__title">{t}</p><p className="es-feature__sub">{s}</p></div>
             </div>
           ))}
+          <p className="es-meta">v2.1.0 · © {new Date().getFullYear()} BusinessSphere</p>
         </div>
-      </div>
+      </aside>
 
       {/* Right — the form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-[#F8FAFC]">
-        <div className="w-full max-w-sm" style={{ perspective: "1200px" }} onMouseMove={handleMouseMove} onMouseLeave={() => { setTiltX(0); setTiltY(0); }}>
-          {/* Mobile brand — only on small screens */}
-          <div className="flex lg:hidden flex-col items-center mb-8">
-            <svg width="48" height="55" viewBox="0 0 120 140" className="mb-2">
-              <defs><linearGradient id="mlg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4ADE80"/><stop offset="100%" stopColor="#16A34A"/></linearGradient></defs>
-              <polygon points="60,6 114,33 114,107 60,134 6,107 6,33" fill="url(#mlg)"/>
-              <text x="60" y="76" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="52" fontWeight="900" fontFamily="Poppins,sans-serif">S</text>
-            </svg>
-            <p className="font-bold text-[#111827] text-[18px]" style={{ fontFamily: "Poppins,sans-serif" }}>Smart Manager</p>
+      <main className="es-auth__form-pane">
+        <div className="es-auth__form">
+          {/* Mobile branding strip */}
+          <div className="es-auth__brand-strip" style={{ borderRadius: "var(--radius-lg)", marginBottom: "var(--space-lg)" }}>
+            <BrandMark size={44} textSize={20} />
+            <p className="es-title es-title--sm">BusinessSphere</p>
+            <p className="es-eyebrow">Intelligent Business Operations</p>
           </div>
 
-          <div style={{ transform: `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`, transition: "transform 0.12s ease-out" }}>
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8">
-              <div className="mb-7">
-                <h1 className="text-[22px] font-bold text-[#111827] mb-1" style={{ fontFamily: "Poppins,sans-serif" }}>Welcome back</h1>
-                <p className="text-[13px] text-slate-500">Sign in to your account to continue</p>
-              </div>
+          <div className="es-card es-card--elevated">
+            <div style={{ marginBottom: "var(--space-lg)" }}>
+              <h1 className="es-title">Welcome back</h1>
+              <p className="es-subtitle">Sign in to your workspace</p>
+            </div>
 
-              {error && <div className="mb-4 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 border border-red-100 text-[12.5px] text-red-700"><AlertCircle size={13} className="shrink-0" />{error}</div>}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Email address</label>
-                  <input type="text" value={identifier} autoComplete="email" onChange={(e) => setIdentifier(e.target.value)} placeholder="you@company.com"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[13.5px] text-[#111827] placeholder-slate-300 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all" />
-                </div>
-                <div>
-                  <label className="text-[12px] font-medium text-slate-600 block mb-1.5">Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 pr-11 text-[13.5px] text-[#111827] placeholder-slate-300 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={busy || !identifier.trim() || !password}
-                  className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", boxShadow: "0 4px 14px rgba(22,163,74,0.35)" }}>
-                  {busy ? "Signing in…" : "Sign in"}
+            <div className="es-segmented" role="tablist" aria-label="Sign-in method" style={{ marginBottom: "var(--space-md)" }}>
+              {LOGIN_TABS.map((t) => (
+                <button key={t.id} type="button" role="tab" aria-selected={method === t.id}
+                  className="es-segmented__item" onClick={() => setMethod(t.id)}>
+                  {t.label}
                 </button>
-              </form>
+              ))}
+            </div>
 
-              <p className="text-center text-[12.5px] text-slate-500 mt-5">
-                Don&apos;t have an account? <button type="button" onClick={onSwitchToSignup} className="font-semibold text-[#16A34A] hover:underline">Create one</button>
-              </p>
-              <button type="button" onClick={() => { setDemoOverride(true); onAuthenticated({ demo: true }); }}
-                className="w-full mt-3 flex items-center justify-center gap-2 text-[12.5px] font-medium text-slate-500 hover:text-[#16A34A] border border-slate-200 rounded-xl py-2.5 transition-colors">
-                <Sparkles size={13} className="text-[#16A34A]" /> Preview demo — no account needed
+            {error && (
+              <div className="es-alert" role="alert" style={{ marginBottom: "var(--space-md)" }}>
+                <AlertCircle size={14} className="shrink-0" style={{ marginTop: 2 }} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="es-stack">
+              <AuthTextField
+                key={tab.id} label={tab.inputLabel} icon={tab.icon} type={tab.type}
+                value={identifier} onChange={(e) => setIdentifier(e.target.value)}
+                placeholder={tab.placeholder} autoComplete={tab.autoComplete} invalid={!!error}
+              />
+              <div>
+                <label htmlFor="login-password" className="es-label">Password</label>
+                <div className="es-field es-field--icon es-field--icon-suffix">
+                  <span className="es-field__icon" aria-hidden="true"><Lock size={15} /></span>
+                  <input id="login-password" type={showPassword ? "text" : "password"} value={password} autoComplete="current-password"
+                    onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="es-input" aria-invalid={error ? "true" : undefined} />
+                  <button type="button" className="es-field__suffix" onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}>
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={busy || !identifier.trim() || !password} className="es-btn es-btn--primary es-btn--block es-btn--lg">
+                {busy ? <><span className="es-spinner" aria-hidden="true" /><span className="es-sr-only">Signing in</span></> : "Continue"}
               </button>
-              {!IS_CONFIGURED && <p className="text-center text-[11px] text-slate-400 mt-3">Demo mode — any credentials continue to the sample company.</p>}
+            </form>
+
+            <div className="es-divider" style={{ margin: "var(--space-lg) 0" }}>or continue with</div>
+
+            <div className="es-social-row">
+              <button type="button" className="es-social-btn" aria-label="Continue with Google" onClick={() => authSignInWithOAuth("google")}><GoogleGlyph /></button>
+              <button type="button" className="es-social-btn" aria-label="Continue with Apple" onClick={() => authSignInWithOAuth("apple")}><AppleGlyph /></button>
+              <button type="button" className="es-social-btn" aria-label="Continue with Microsoft" onClick={() => authSignInWithOAuth("azure")}><MicrosoftGlyph /></button>
+            </div>
+
+            <div className="flex items-center justify-between" style={{ marginTop: "var(--space-lg)" }}>
+              <button type="button" className="es-link" onClick={() => notify("Password recovery is handled by your workspace administrator.")}>Forgot password?</button>
+              <button type="button" className="es-link" onClick={onSwitchToSignup}>Create account</button>
             </div>
           </div>
-          <p className="text-center text-[11px] text-slate-400 mt-4">© {new Date().getFullYear()} Smart Manager · Enterprise Business Ecosystem</p>
+
+          <button type="button" onClick={() => { setDemoOverride(true); onAuthenticated({ demo: true }); }}
+            className="es-btn es-btn--secondary es-btn--block" style={{ marginTop: "var(--space-md)" }}>
+            <Sparkles size={14} style={{ color: "var(--accent-gold)" }} /> Preview demo — no account needed
+          </button>
+          {!IS_CONFIGURED && <p className="es-meta" style={{ textAlign: "center", marginTop: "var(--space-sm)" }}>Demo mode — any credentials continue to the sample company.</p>}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
+
 
 // Real inline brand glyphs — not a lucide icon standing in for a brand
 // mark, and not an external image asset this environment has no way to
