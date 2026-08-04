@@ -249,12 +249,7 @@ export function sb(table) {
       return execute(params.get("select"), 0);
     },
 
-    // Live-data resilience: a real Supabase project can legitimately be
-    // missing an optional child table (or its foreign key), which makes
-    // PostgREST reject the whole request over one embed. Rather than
-    // failing an entire screen, drop the embeds that can't be resolved and
-    // retry with the flat row set — the mappers already treat nested
-    // arrays as optional.
+
 
     // allow `await sb(table).select().eq(...)` directly, like supabase-js
     then(resolve, reject) {
