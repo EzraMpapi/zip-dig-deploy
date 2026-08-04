@@ -120,6 +120,65 @@ export function sb(table) {
   let body = null;
   let single = false;
 
+  // Splits a PostgREST select string on top-level commas only, so embedded
+  // relations like "pos_returns(*,pos_return_items(*))" stay intact.
+  function splitSelect(sel) {
+    const out = [];
+    let depth = 0, cur = "";
+    for (const ch of sel) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) { out.push(cur); cur = ""; continue; }
+      cur += ch;
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  async function execute(selectOverride, attempt) {
+    const search = new URLSearchParams(params);
+    if (selectOverride) search.set("select", selectOverride);
+    const res = await fetch(`${path}?${search.toString()}`, {
+      method,
+      headers: {
+        ...authHeaders(),
+        Prefer: method === "GET" ? undefined : "return=representation",
+      },
+      body,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return single ? data[0] : data;
+    }
+
+    let err = {};
+    try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
+
+    // Unresolvable embed (missing child table or foreign key): retry flat.
+    const sel = selectOverride || "*";
+    const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
+    if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
+      const flat = splitSelect(sel).filter((p) => !p.includes("(")).join(",") || "*";
+      if (typeof console !== "undefined") {
+        console.warn(`[supabase] ${table}: dropping unresolved embeds from select — using "${flat}"`);
+      }
+      return execute(flat, attempt + 1);
+    }
+
+    // Table not present in this project's schema: behave like an empty set
+    // instead of tearing down the screen that reads it.
+    if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
+      if (typeof console !== "undefined") {
+        console.warn(`[supabase] ${table}: not found in this project — treating as empty.`);
+      }
+      return single ? undefined : [];
+    }
+
+    throw new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+  }
+
+
   const builder = {
     select(cols = "*") {
       params.set("select", cols);
