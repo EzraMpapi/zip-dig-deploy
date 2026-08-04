@@ -111,6 +111,14 @@ export async function callRpc(name, params, accessToken) {
   return data;
 }
 
+/* Session-level schema memory. A connected Supabase project may not carry
+   every optional table, foreign key or sort column this app knows how to
+   read; once a shape is proven unsupported we remember it so remounting a
+   module doesn't re-issue a request we already know will fail. */
+const SELECT_FALLBACK = new Map(); // "table|select" → working select string
+const ORDERLESS = new Set();       // tables whose sort column doesn't exist
+const DEAD_TABLES = new Set();     // tables absent from this project
+
 // Minimal chainable query builder over PostgREST, mirroring the shape of the
 // official supabase-js client closely enough that swapping later is trivial.
 export function sb(table) {
@@ -135,9 +143,20 @@ export function sb(table) {
     return out;
   }
 
+  const empty = () => (single ? undefined : []);
+
   async function execute(selectOverride, attempt) {
+    if (method === "GET" && DEAD_TABLES.has(table)) return empty();
+
     const search = new URLSearchParams(params);
-    if (selectOverride) search.set("select", selectOverride);
+    let sel = selectOverride || search.get("select") || "*";
+    if (method === "GET") {
+      const cached = SELECT_FALLBACK.get(`${table}|${sel}`);
+      if (cached) sel = cached;
+      if (ORDERLESS.has(table)) search.delete("order");
+    }
+    if (search.has("select") || selectOverride) search.set("select", sel);
+
     const res = await fetch(`${path}?${search.toString()}`, {
       method,
       headers: {
@@ -156,44 +175,39 @@ export function sb(table) {
     try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
 
     // Unresolvable embed (missing child table or foreign key): retry flat.
-    const sel = selectOverride || "*";
     const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
     if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
       const flat = splitSelect(sel).filter((p) => !p.includes("(")).join(",") || "*";
-      if (typeof console !== "undefined") {
-        console.warn(`[supabase] ${table}: dropping unresolved embeds from select — using "${flat}"`);
-      }
+      SELECT_FALLBACK.set(`${table}|${selectOverride || params.get("select") || "*"}`, flat);
+      console.warn(`[supabase] ${table}: unresolved embed dropped — using select "${flat}"`);
       return execute(flat, attempt + 1);
     }
 
     // Sort column absent from this project's table: retry unordered rather
     // than failing the read outright.
     if (method === "GET" && err.code === "42703" && search.has("order")) {
-      if (typeof console !== "undefined") {
-        console.warn(`[supabase] ${table}: ${err.message} — retrying without ordering.`);
-      }
-      params.delete("order");
+      ORDERLESS.add(table);
+      console.warn(`[supabase] ${table}: ${err.message} — retrying without ordering.`);
       return execute(selectOverride, attempt + 1);
     }
 
     // Table not present in this project's schema: behave like an empty set
     // instead of tearing down the screen that reads it.
     if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
-      if (typeof console !== "undefined") {
-        console.warn(`[supabase] ${table}: not found in this project — treating as empty.`);
-      }
-      return single ? undefined : [];
+      DEAD_TABLES.add(table);
+      console.warn(`[supabase] ${table}: not present in this project — treating as empty.`);
+      return empty();
     }
 
     // Any other read failure (missing column in an explicit projection, RLS
-    // permission error, transient network fault) still shouldn't blank a
-    // whole module — surface it in the console and return an empty set.
+    // restriction, transient network fault) still shouldn't blank a whole
+    // module — surface it in the console and return an empty set.
     if (method === "GET") {
-      if (typeof console !== "undefined") {
-        console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
-      }
-      return single ? undefined : [];
+      console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
+      return empty();
     }
+
+
 
 
     throw new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
