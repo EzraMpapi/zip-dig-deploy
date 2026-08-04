@@ -166,6 +166,16 @@ export function sb(table) {
       return execute(flat, attempt + 1);
     }
 
+    // Sort column absent from this project's table: retry unordered rather
+    // than failing the read outright.
+    if (method === "GET" && err.code === "42703" && search.has("order")) {
+      if (typeof console !== "undefined") {
+        console.warn(`[supabase] ${table}: ${err.message} — retrying without ordering.`);
+      }
+      params.delete("order");
+      return execute(selectOverride, attempt + 1);
+    }
+
     // Table not present in this project's schema: behave like an empty set
     // instead of tearing down the screen that reads it.
     if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
@@ -174,6 +184,17 @@ export function sb(table) {
       }
       return single ? undefined : [];
     }
+
+    // Any other read failure (missing column in an explicit projection, RLS
+    // permission error, transient network fault) still shouldn't blank a
+    // whole module — surface it in the console and return an empty set.
+    if (method === "GET") {
+      if (typeof console !== "undefined") {
+        console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
+      }
+      return single ? undefined : [];
+    }
+
 
     throw new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
   }
