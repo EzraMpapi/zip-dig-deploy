@@ -11,11 +11,11 @@ import {  } from "lucide-react";
 const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
 
 export const SUPABASE_URL =
-  ENV.VITE_SUPABASE_URL || "https://bqrpiookucsdjvcvjrul.supabase.co";
+  ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
 
 export const SUPABASE_ANON_KEY =
   ENV.VITE_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcnBpb29rdWNzZGp2Y3ZqcnVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNjAxOTgsImV4cCI6MjA5ODgzNjE5OH0.qfjK9-OTsRJFuywvZFWsAFsOgMWzLIvx8Fc5-xeQuqA";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsaG5nc3JpaGFoaHl4bmp4cnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NjI0NzMsImV4cCI6MjEwMDAzODQ3M30.J3M1ELTb1dEoKx4tQfn_Yk7H15HIoxIW4PI3dyWYEHE";
 
 export const IS_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
@@ -111,6 +111,14 @@ export async function callRpc(name, params, accessToken) {
   return data;
 }
 
+/* Session-level schema memory. A connected Supabase project may not carry
+   every optional table, foreign key or sort column this app knows how to
+   read; once a shape is proven unsupported we remember it so remounting a
+   module doesn't re-issue a request we already know will fail. */
+const SELECT_FALLBACK = new Map(); // "table|select" → working select string
+const ORDERLESS = new Set();       // tables whose sort column doesn't exist
+const DEAD_TABLES = new Set();     // tables absent from this project
+
 // Minimal chainable query builder over PostgREST, mirroring the shape of the
 // official supabase-js client closely enough that swapping later is trivial.
 export function sb(table) {
@@ -119,6 +127,92 @@ export function sb(table) {
   let method = "GET";
   let body = null;
   let single = false;
+
+  // Splits a PostgREST select string on top-level commas only, so embedded
+  // relations like "pos_returns(*,pos_return_items(*))" stay intact.
+  function splitSelect(sel) {
+    const out = [];
+    let depth = 0, cur = "";
+    for (const ch of sel) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) { out.push(cur); cur = ""; continue; }
+      cur += ch;
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  const empty = () => (single ? undefined : []);
+
+  async function execute(selectOverride, attempt) {
+    if (method === "GET" && DEAD_TABLES.has(table)) return empty();
+
+    const search = new URLSearchParams(params);
+    let sel = selectOverride || search.get("select") || "*";
+    if (method === "GET") {
+      const cached = SELECT_FALLBACK.get(`${table}|${sel}`);
+      if (cached) sel = cached;
+      if (ORDERLESS.has(table)) search.delete("order");
+    }
+    if (search.has("select") || selectOverride) search.set("select", sel);
+
+    const res = await fetch(`${path}?${search.toString()}`, {
+      method,
+      headers: {
+        ...authHeaders(),
+        Prefer: method === "GET" ? undefined : "return=representation",
+      },
+      body,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return single ? data[0] : data;
+    }
+
+    let err = {};
+    try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
+
+    // Unresolvable embed (missing child table or foreign key): retry flat.
+    const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
+    if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
+      const flat = splitSelect(sel).filter((p) => !p.includes("(")).join(",") || "*";
+      SELECT_FALLBACK.set(`${table}|${selectOverride || params.get("select") || "*"}`, flat);
+      console.warn(`[supabase] ${table}: unresolved embed dropped — using select "${flat}"`);
+      return execute(flat, attempt + 1);
+    }
+
+    // Sort column absent from this project's table: retry unordered rather
+    // than failing the read outright.
+    if (method === "GET" && err.code === "42703" && search.has("order")) {
+      ORDERLESS.add(table);
+      console.warn(`[supabase] ${table}: ${err.message} — retrying without ordering.`);
+      return execute(selectOverride, attempt + 1);
+    }
+
+    // Table not present in this project's schema: behave like an empty set
+    // instead of tearing down the screen that reads it.
+    if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
+      DEAD_TABLES.add(table);
+      console.warn(`[supabase] ${table}: not present in this project — treating as empty.`);
+      return empty();
+    }
+
+    // Any other read failure (missing column in an explicit projection, RLS
+    // restriction, transient network fault) still shouldn't blank a whole
+    // module — surface it in the console and return an empty set.
+    if (method === "GET") {
+      console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
+      return empty();
+    }
+
+
+
+
+    throw new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+  }
+
 
   const builder = {
     select(cols = "*") {
@@ -152,19 +246,11 @@ export function sb(table) {
       return builder;
     },
     async run() {
-      const url = `${path}?${params.toString()}`;
-      const res = await fetch(url, {
-        method,
-        headers: {
-          ...authHeaders(),
-          Prefer: method === "GET" ? undefined : "return=representation",
-        },
-        body,
-      });
-      if (!res.ok) throw new Error(`Supabase ${method} ${table} failed: ${res.status}`);
-      const data = await res.json();
-      return single ? data[0] : data;
+      return execute(params.get("select"), 0);
     },
+
+
+
     // allow `await sb(table).select().eq(...)` directly, like supabase-js
     then(resolve, reject) {
       return builder.run().then(resolve, reject);
