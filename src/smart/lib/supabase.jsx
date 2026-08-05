@@ -119,14 +119,82 @@ const SELECT_FALLBACK = new Map(); // "table|select" → working select string
 const ORDERLESS = new Set();       // tables whose sort column doesn't exist
 const DEAD_TABLES = new Set();     // tables absent from this project
 
+const REQUEST_TIMEOUT_MS = 12_000;
+
+/* Filters carried on a PostgREST query string ("customer_id=eq.7") in the
+   structured form the offline layer needs to run the same predicate against
+   the local mirror, and the sync engine needs to replay the write later. */
+function parseFilters(search) {
+  const filters = [];
+  for (const [col, raw] of search.entries()) {
+    if (col === "select" || col === "order" || col === "limit" || col === "offset") continue;
+    const idx = String(raw).indexOf(".");
+    if (idx === -1) { filters.push({ col, op: "eq", val: String(raw) }); continue; }
+    filters.push({ col, op: raw.slice(0, idx), val: raw.slice(idx + 1) });
+  }
+  return filters;
+}
+
+function filtersToSearch(filters = []) {
+  const search = new URLSearchParams();
+  for (const { col, op, val } of filters) search.append(col, `${op}.${val}`);
+  return search;
+}
+
+/* A network failure, timeout, 5xx, or expired token are all the same event to
+   the app: the backend is not answering, so work continues locally. Only a
+   definite rejection of the payload itself (4xx that isn't auth/throttling)
+   is a real error the caller should see. */
+function isBackendUnreachable(status) {
+  return status == null || status >= 500 || status === 401 || status === 403 || status === 408 || status === 429;
+}
+
+async function rawRequest({ table, method = "GET", filters = [], body = null, select = null, order = null }) {
+  const search = filtersToSearch(filters);
+  if (select) search.set("select", select);
+  if (order) search.set("order", order);
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${search.toString()}`, {
+      method,
+      headers: { ...authHeaders(), Prefer: method === "GET" ? undefined : "return=representation" },
+      body: body == null ? null : JSON.stringify(body),
+      signal: controller ? controller.signal : undefined,
+    });
+    if (!res.ok) {
+      let err = {};
+      try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
+      const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+      error.status = res.status;
+      error.code = err.code;
+      throw error;
+    }
+    if (res.status === 204) return [];
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/* The sync engine reaches the network only through this transport, which
+   keeps it free of any import cycle with this module and makes it testable
+   against a fake sender. */
+offline.syncEngine.configureTransport(rawRequest);
+
 // Minimal chainable query builder over PostgREST, mirroring the shape of the
 // official supabase-js client closely enough that swapping later is trivial.
+// Every call now runs through the offline-first layer: reads fall back to the
+// local workspace mirror, writes fall back to the local workspace plus the
+// synchronization queue. Modules above this file are unchanged.
 export function sb(table) {
   let path = `${SUPABASE_URL}/rest/v1/${table}`;
   const params = new URLSearchParams();
   let method = "GET";
   let body = null;
   let single = false;
+  let payload = null;
 
   // Splits a PostgREST select string on top-level commas only, so embedded
   // relations like "pos_returns(*,pos_return_items(*))" stay intact.
@@ -144,31 +212,68 @@ export function sb(table) {
   }
 
   const empty = () => (single ? undefined : []);
+  const shape = (rows) => (single ? rows[0] : rows);
+
+  async function localRead(search) {
+    const rows = await offline.readOffline(table, {
+      filters: parseFilters(search),
+      order: search.get("order"),
+      limit: single ? 1 : Infinity,
+    });
+    return shape(rows);
+  }
+
+  async function localWrite(search) {
+    const filters = parseFilters(search);
+    if (method === "POST") {
+      const saved = await offline.applyOfflineInsert(table, payload);
+      return single ? (Array.isArray(saved) ? saved[0] : saved) : (Array.isArray(saved) ? saved : [saved]);
+    }
+    if (method === "PATCH") return shape(await offline.applyOfflineUpdate(table, filters, payload || {}));
+    return shape(await offline.applyOfflineDelete(table, filters));
+  }
 
   async function execute(selectOverride, attempt) {
-    if (method === "GET" && DEAD_TABLES.has(table)) return empty();
-
     const search = new URLSearchParams(params);
     let sel = selectOverride || search.get("select") || "*";
     if (method === "GET") {
       const cached = SELECT_FALLBACK.get(`${table}|${sel}`);
       if (cached) sel = cached;
       if (ORDERLESS.has(table)) search.delete("order");
+      // A table this project doesn't have, or a backend that isn't answering:
+      // serve the local mirror rather than an empty screen.
+      if (DEAD_TABLES.has(table) || offline.syncEngine.isOffline()) return localRead(search);
+    } else if (offline.syncEngine.isOffline()) {
+      return localWrite(search);
     }
     if (search.has("select") || selectOverride) search.set("select", sel);
 
-    const res = await fetch(`${path}?${search.toString()}`, {
-      method,
-      headers: {
-        ...authHeaders(),
-        Prefer: method === "GET" ? undefined : "return=representation",
-      },
-      body,
-    });
+    let res;
+    try {
+      res = await fetch(`${path}?${search.toString()}`, {
+        method,
+        headers: {
+          ...authHeaders(),
+          Prefer: method === "GET" ? undefined : "return=representation",
+        },
+        body,
+      });
+    } catch (networkError) {
+      // Genuine transport failure (offline, DNS, CORS, aborted): switch the
+      // whole app to offline mode and complete the operation locally.
+      offline.syncEngine.reportBackendFailure(networkError);
+      return method === "GET" ? localRead(search) : localWrite(search);
+    }
 
     if (res.ok) {
-      const data = await res.json();
-      return single ? data[0] : data;
+      offline.syncEngine.reportBackendSuccess();
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : [];
+      const rows = Array.isArray(data) ? data : [data];
+      // Every successful read and write refreshes the local mirror, so the
+      // next offline session starts from real data, not an empty database.
+      offline.cacheRows(table, rows);
+      return single ? rows[0] : rows;
     }
 
     let err = {};
@@ -192,25 +297,33 @@ export function sb(table) {
     }
 
     // Table not present in this project's schema: behave like an empty set
-    // instead of tearing down the screen that reads it.
+    // instead of tearing down the screen that reads it — but check the local
+    // workspace first, because the user may have created rows offline.
     if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
       DEAD_TABLES.add(table);
-      console.warn(`[supabase] ${table}: not present in this project — treating as empty.`);
-      return empty();
+      console.warn(`[supabase] ${table}: not present in this project — serving local workspace data.`);
+      return localRead(search);
+    }
+
+    if (isBackendUnreachable(res.status)) {
+      offline.syncEngine.reportBackendFailure(new Error(err.message || `HTTP ${res.status}`));
+      return method === "GET" ? localRead(search) : localWrite(search);
     }
 
     // Any other read failure (missing column in an explicit projection, RLS
-    // restriction, transient network fault) still shouldn't blank a whole
-    // module — surface it in the console and return an empty set.
+    // restriction) still shouldn't blank a whole module — fall back to the
+    // local mirror and note it in the console.
     if (method === "GET") {
       console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
-      return empty();
+      const local = await localRead(search);
+      return Array.isArray(local) && local.length ? local : empty();
     }
 
-
-
-
-    throw new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+    // A definite rejection of the payload itself. Queueing it would mean
+    // retrying a write that can never succeed, so the caller is told.
+    const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+    error.status = res.status;
+    throw error;
   }
 
 
@@ -229,11 +342,13 @@ export function sb(table) {
     },
     insert(row) {
       method = "POST";
+      payload = row;
       body = JSON.stringify(row);
       return builder;
     },
     update(patch) {
       method = "PATCH";
+      payload = patch;
       body = JSON.stringify(patch);
       return builder;
     },
@@ -258,3 +373,4 @@ export function sb(table) {
   };
   return builder;
 }
+
