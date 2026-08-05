@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import * as offline from "./offline/index.jsx";
 /* ──────────────────────────────────────────────────────────────────────────
    SUPABASE CLIENT — hand-rolled, fetch-based (no SDK)
 
