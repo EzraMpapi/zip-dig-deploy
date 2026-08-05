@@ -744,7 +744,12 @@ export function SmartManager() {
                 {criticalAlerts.length} Alert{criticalAlerts.length>1?"s":""}
               </button>
             )}
+            {/* ── Offline / sync state — one place to see connectivity, the
+                 pending queue and the local workspace ── */}
+            <SyncStatusPill onOpen={() => setShowWorkspace(true)} />
+            {showWorkspace && <OfflineWorkspacePanel onClose={() => setShowWorkspace(false)} />}
             {/* ── Dark mode toggle ── */}
+
             <button
               onClick={()=>setDarkMode(d=>!d)}
               className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-[#111827] transition-all"
