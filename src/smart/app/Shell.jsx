@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { AlertCircle, Building2, Calendar, ChevronDown, Lock, MapPin, Moon, Search, Settings, Sparkles, Sun, X } from "lucide-react";
 import { ActivityStream, mapPosTransactionRow } from "../components/ActivityStream.jsx";
 import { BrandMark } from "../components/BrandMark.jsx";
+import { OfflineWorkspacePanel, SyncStatusPill } from "../components/OfflineStatus.jsx";
+import * as offline from "../lib/offline/index.jsx";
 import { DailyBriefing } from "../components/SendReceiptPanel.jsx";
 import {
   ConfirmDialog,
@@ -82,6 +84,13 @@ export function SmartManager() {
   // tries to resume a stored session on load before falling back to them.
   const [authView, setAuthView] = useState("login");
   const [session, setSession] = useState(() => (IS_CONFIGURED ? null : { demo: true }));
+  const [showWorkspace, setShowWorkspace] = useState(false);
+
+  // Each signed-in user gets a physically separate local workspace, so a
+  // shared device never mixes one company’s cached data into another’s.
+  useEffect(() => {
+    offline.openWorkspace(session?.userId || (session?.demo ? "demo" : null));
+  }, [session?.userId, session?.demo]);
   // Always starts true now, in both modes — previously demo mode skipped
   // this state entirely, which meant the branded loading screen below
   // (and its real logo animation) would never actually be seen outside a
