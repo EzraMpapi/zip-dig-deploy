@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, Briefcase, Building2, CheckCircle2, ChevronLeft, ClipboardList, Eye, EyeOff, Factory, FileText, HardHat, HeartPulse, Lock, Mail, Package, ReceiptText, Sparkles, Store, TrendingUp, Truck, User, Users, Wallet } from "lucide-react";
+import { CircleAlert as AlertCircle, Briefcase, Building2, CircleCheck as CheckCircle2, ChevronLeft, ClipboardList, Eye, EyeOff, Factory, FileText, HardHat, HeartPulse, Lock, Mail, Package, ReceiptText, Sparkles, Store, TrendingUp, Truck, User, Users, Wallet } from "lucide-react";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { CategoryPicker, FormField } from "../components/ui.jsx";
 import { COMPANY_CATEGORIES, ROLES } from "../data/core.jsx";
@@ -228,9 +228,20 @@ export function LoginPage({ onAuthenticated, onSwitchToSignup }) {
       {/* Left — brand panel (desktop and wide only) */}
       <aside className="es-auth__brand">
         <div className="es-auth__pattern" aria-hidden="true" />
+        <div className="es-cartoon" aria-hidden="true">
+          <span className="es-cartoon__shape es-cartoon__shape--circle" />
+          <span className="es-cartoon__shape es-cartoon__shape--square" />
+          <span className="es-cartoon__shape es-cartoon__shape--triangle" />
+          <span className="es-cartoon__shape es-cartoon__shape--ring" />
+          <span className="es-cartoon__shape es-cartoon__shape--dot" />
+          <span className="es-cartoon__shape es-cartoon__shape--dot-2" />
+          <span className="es-cartoon__shape es-cartoon__shape--dot-3" />
+        </div>
         <div className="relative z-10">
           <div className="flex items-center gap-3" style={{ marginBottom: "var(--space-3xl)" }}>
-            <BrandMark size={40} textSize={18} />
+            <div className="es-auth__logo-wrap">
+              <BrandMark size={48} spin />
+            </div>
             <div>
               <p className="es-title es-title--sm">BusinessSphere</p>
               <p className="es-eyebrow">Intelligent Business Operations</p>
@@ -250,6 +261,11 @@ export function LoginPage({ onAuthenticated, onSwitchToSignup }) {
               <div><p className="es-feature__title">{t}</p><p className="es-feature__sub">{s}</p></div>
             </div>
           ))}
+          <div className="es-cartoon__progress" aria-hidden="true">
+            <span className="es-cartoon__progress-dot" />
+            <span className="es-cartoon__progress-dot" />
+            <span className="es-cartoon__progress-dot" />
+          </div>
           <p className="es-meta">v2.1.0 · © {new Date().getFullYear()} BusinessSphere</p>
         </div>
       </aside>
@@ -259,7 +275,7 @@ export function LoginPage({ onAuthenticated, onSwitchToSignup }) {
         <div className="es-auth__form">
           {/* Mobile branding strip */}
           <div className="es-auth__brand-strip" style={{ borderRadius: "var(--radius-lg)", marginBottom: "var(--space-lg)" }}>
-            <BrandMark size={44} textSize={20} />
+            <div className="es-auth__logo-wrap"><BrandMark size={44} spin /></div>
             <p className="es-title es-title--sm">BusinessSphere</p>
             <p className="es-eyebrow">Intelligent Business Operations</p>
           </div>
