@@ -620,20 +620,9 @@ export function SmartManager() {
       >
         <div className="relative px-5 py-5 border-b border-[#F3F4F6] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            {/* Hexagonal "S" mark via clip-path — a safe, dependency-free
-                way to recreate the Smart Manager logo's silhouette at
-                sidebar-icon size, where the full logo's circuit-node and
-                bar-chart detailing would be illegible anyway. */}
-            <div
-              className="w-8 h-8 flex items-center justify-center shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #22C55E, #16A34A)",
-                clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
-                boxShadow: "0 4px 14px rgba(22,163,74,.35)",
-              }}
-            >
-              <span className="text-white text-[15px] font-bold" style={{ fontFamily: "'Poppins'" }}>S</span>
-            </div>
+            {/* Official Smart Manager hexagon mark — shared BrandMark so the
+                sidebar can never drift from the auth screens and portals. */}
+            <BrandMark size={32} textSize={14} />
             <div className="flex flex-col leading-tight">
               <span className="text-[14.5px] font-semibold tracking-tight brand-wordmark" style={{ fontFamily: "'Poppins'" }}>
                 Smart Manager
