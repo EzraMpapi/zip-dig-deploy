@@ -16,27 +16,49 @@ export const POS_PAYMENT_COLOR = {
   "Mobile Money": "#F59E0B",
 };
 
-export const RETURN_REASONS = ["Customer changed mind", "Wrong item", "Defective / damaged", "Duplicate purchase", "Other"];
+export const RETURN_REASONS = [
+  "Customer changed mind",
+  "Wrong item",
+  "Defective / damaged",
+  "Duplicate purchase",
+  "Other",
+];
 
 export const posTransactionsSeed = [
   {
-    id: "POS-3312", cashier: "Halima Juma", method: "Mobile Money", date: "2026-07-02",
-    items: [{ sku: "HDW-2205", name: "Salon styling chair", qty: 1, price: 284 }], returns: [],
+    id: "POS-3312",
+    cashier: "Halima Juma",
+    method: "Mobile Money",
+    date: "2026-07-02",
+    items: [{ sku: "HDW-2205", name: "Salon styling chair", qty: 1, price: 284 }],
+    returns: [],
   },
   {
-    id: "POS-3311", cashier: "Halima Juma", method: "Cash", date: "2026-07-02",
+    id: "POS-3311",
+    cashier: "Halima Juma",
+    method: "Cash",
+    date: "2026-07-02",
     items: [
       { sku: "HDW-2207", name: "Warehouse shelving unit", qty: 2, price: 105 },
       { sku: "HDW-2210", name: "Pharmacy display unit", qty: 1, price: 864 },
-    ], returns: [],
+    ],
+    returns: [],
   },
   {
-    id: "POS-3310", cashier: "Fatuma Salim", method: "Card", date: "2026-07-01",
-    items: [{ sku: "HDW-2201", name: "Industrial water heater 50L", qty: 1, price: 421 }], returns: [],
+    id: "POS-3310",
+    cashier: "Fatuma Salim",
+    method: "Card",
+    date: "2026-07-01",
+    items: [{ sku: "HDW-2201", name: "Industrial water heater 50L", qty: 1, price: 421 }],
+    returns: [],
   },
   {
-    id: "POS-3309", cashier: "Halima Juma", method: "Cash", date: "2026-06-30",
-    items: [{ sku: "HDW-2206", name: "Backwash basin", qty: 3, price: 378 }], returns: [],
+    id: "POS-3309",
+    cashier: "Halima Juma",
+    method: "Cash",
+    date: "2026-06-30",
+    items: [{ sku: "HDW-2206", name: "Backwash basin", qty: 3, price: 378 }],
+    returns: [],
   },
 ];
 
@@ -65,7 +87,9 @@ export function KpiCard({ item }) {
         </span>
       </div>
       <div>
-        <div className="text-[22px] font-semibold text-[#111827] font-mono tracking-tight leading-none">{item.value}</div>
+        <div className="text-[22px] font-semibold text-[#111827] font-mono tracking-tight leading-none">
+          {item.value}
+        </div>
         <div className="text-[12.5px] text-slate-500 mt-1.5">{item.label}</div>
       </div>
     </div>
@@ -107,11 +131,19 @@ export function SortableHeader({ label, field, sort, onSort, align = "left" }) {
       onClick={() => onSort(field)}
       className={`px-4 py-3 font-medium select-none cursor-pointer group ${align === "right" ? "text-right" : "text-left"}`}
     >
-      <span className={`inline-flex items-center gap-1 ${active ? "text-[#111827]" : "group-hover:text-slate-600"}`}>
+      <span
+        className={`inline-flex items-center gap-1 ${active ? "text-[#111827]" : "group-hover:text-slate-600"}`}
+      >
         {label}
         <span className="flex flex-col -space-y-1">
-          <ChevronUp size={10} className={active && sort.direction === "asc" ? "text-[#16A34A]" : "text-slate-300"} />
-          <ChevronDown size={10} className={active && sort.direction === "desc" ? "text-[#16A34A]" : "text-slate-300"} />
+          <ChevronUp
+            size={10}
+            className={active && sort.direction === "asc" ? "text-[#16A34A]" : "text-slate-300"}
+          />
+          <ChevronDown
+            size={10}
+            className={active && sort.direction === "desc" ? "text-[#16A34A]" : "text-slate-300"}
+          />
         </span>
       </span>
     </th>
@@ -122,12 +154,17 @@ export function sortRows(rows, sort) {
   if (!sort.field) return rows;
   const dir = sort.direction === "asc" ? 1 : -1;
   return [...rows].sort((a, b) => {
-    const av = a[sort.field], bv = b[sort.field];
+    const av = a[sort.field],
+      bv = b[sort.field];
     if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
     return String(av ?? "").localeCompare(String(bv ?? "")) * dir;
   });
 }
 
 export function toggleSort(sort, setSort, field) {
-  setSort((s) => (s.field === field ? { field, direction: s.direction === "asc" ? "desc" : "asc" } : { field, direction: "asc" }));
+  setSort((s) =>
+    s.field === field
+      ? { field, direction: s.direction === "asc" ? "desc" : "asc" }
+      : { field, direction: "asc" },
+  );
 }

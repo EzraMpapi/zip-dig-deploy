@@ -22,32 +22,70 @@ import { Bell, Hash, Mail, MessageCircle, MessageSquare, Video } from "lucide-re
 // not a fake "Sent!" toast.
 export const NOTIFICATION_CHANNELS = [
   {
-    id: "slack", name: "Slack", icon: Hash, functional: true,
-    fields: [{ key: "webhookUrl", label: "Incoming Webhook URL", placeholder: "https://hooks.slack.com/services/..." }],
+    id: "slack",
+    name: "Slack",
+    icon: Hash,
+    functional: true,
+    fields: [
+      {
+        key: "webhookUrl",
+        label: "Incoming Webhook URL",
+        placeholder: "https://hooks.slack.com/services/...",
+      },
+    ],
   },
   {
-    id: "teams", name: "Microsoft Teams", icon: Video, functional: true,
-    fields: [{ key: "webhookUrl", label: "Incoming Webhook URL", placeholder: "https://yourorg.webhook.office.com/webhookb2/..." }],
+    id: "teams",
+    name: "Microsoft Teams",
+    icon: Video,
+    functional: true,
+    fields: [
+      {
+        key: "webhookUrl",
+        label: "Incoming Webhook URL",
+        placeholder: "https://yourorg.webhook.office.com/webhookb2/...",
+      },
+    ],
   },
   {
-    id: "email", name: "Email", icon: Mail, functional: false,
-    fields: [{ key: "fromAddress", label: "From address", placeholder: "notifications@yourcompany.tz" }],
-    requirement: "Requires a backend email service (SendGrid, Amazon SES, Postmark) — a browser cannot send email directly.",
+    id: "email",
+    name: "Email",
+    icon: Mail,
+    functional: false,
+    fields: [
+      { key: "fromAddress", label: "From address", placeholder: "notifications@yourcompany.tz" },
+    ],
+    requirement:
+      "Requires a backend email service (SendGrid, Amazon SES, Postmark) — a browser cannot send email directly.",
   },
   {
-    id: "sms", name: "SMS", icon: MessageSquare, functional: false,
+    id: "sms",
+    name: "SMS",
+    icon: MessageSquare,
+    functional: false,
     fields: [{ key: "fromNumber", label: "Sender number", placeholder: "+255 XXX XXX XXX" }],
-    requirement: "Requires an SMS gateway (Twilio, Africa's Talking) with server-held credentials — never safe to embed client-side.",
+    requirement:
+      "Requires an SMS gateway (Twilio, Africa's Talking) with server-held credentials — never safe to embed client-side.",
   },
   {
-    id: "whatsapp", name: "WhatsApp", icon: MessageCircle, functional: false,
-    fields: [{ key: "businessNumber", label: "WhatsApp Business number", placeholder: "+255 XXX XXX XXX" }],
-    requirement: "Requires the WhatsApp Business API via Meta or a provider like Twilio, plus Meta approval — not directly callable from a browser.",
+    id: "whatsapp",
+    name: "WhatsApp",
+    icon: MessageCircle,
+    functional: false,
+    fields: [
+      { key: "businessNumber", label: "WhatsApp Business number", placeholder: "+255 XXX XXX XXX" },
+    ],
+    requirement:
+      "Requires the WhatsApp Business API via Meta or a provider like Twilio, plus Meta approval — not directly callable from a browser.",
   },
   {
-    id: "push", name: "Push Notifications", icon: Bell, functional: false,
+    id: "push",
+    name: "Push Notifications",
+    icon: Bell,
+    functional: false,
     fields: [{ key: "serverKey", label: "Push server key", placeholder: "FCM / APNs server key" }],
-    requirement: "Requires a push server holding device tokens and a server key that can never be exposed in frontend code.",
+    requirement:
+      "Requires a push server holding device tokens and a server key that can never be exposed in frontend code.",
   },
 ];
 
@@ -66,7 +104,15 @@ export const ALERT_ROUTING_TYPES = [
   { id: "subscriptions-due", label: "Subscriptions due for billing" },
 ];
 
-export const notificationChannelsSeed = NOTIFICATION_CHANNELS.map((c) => ({ id: c.id, enabled: false, webhookUrl: "", fromAddress: "", fromNumber: "", businessNumber: "", serverKey: "" }));
+export const notificationChannelsSeed = NOTIFICATION_CHANNELS.map((c) => ({
+  id: c.id,
+  enabled: false,
+  webhookUrl: "",
+  fromAddress: "",
+  fromNumber: "",
+  businessNumber: "",
+  serverKey: "",
+}));
 
 export const notificationRulesSeed = ALERT_ROUTING_TYPES.map((t) => ({ id: t.id, channels: [] }));
 

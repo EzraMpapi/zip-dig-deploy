@@ -45,7 +45,9 @@ export const PAYMENT_METHODS = ["Cash", "Card", "Mobile Money", "Bank Transfer"]
 // and offers WA / Email / Print in a non-blocking slide-up panel.
 export const invoiceCreatedBus = {
   listeners: new Set(),
-  push(invoice) { this.listeners.forEach((fn) => fn(invoice)); },
+  push(invoice) {
+    this.listeners.forEach((fn) => fn(invoice));
+  },
 };
 
 // Recording a payment is not a simple status flip — it can be partial, and
@@ -62,11 +64,23 @@ export function recordPayment(invoicesHook, docId, payment, actor) {
   const { total } = lineTotal(inv.items);
   const newAmountPaid = Math.min(total, (inv.amountPaid || 0) + payment.amount);
   const newStatus = newAmountPaid >= total ? "Paid" : "Partial";
-  const paymentRecord = { id: `PMT-${Date.now()}`, amount: payment.amount, method: payment.method, date: payment.date, reference: payment.reference || null };
-  const patch = { amountPaid: newAmountPaid, status: newStatus, payments: [paymentRecord, ...(inv.payments || [])] };
+  const paymentRecord = {
+    id: `PMT-${Date.now()}`,
+    amount: payment.amount,
+    method: payment.method,
+    date: payment.date,
+    reference: payment.reference || null,
+  };
+  const patch = {
+    amountPaid: newAmountPaid,
+    status: newStatus,
+    payments: [paymentRecord, ...(inv.payments || [])],
+  };
 
   invoicesHook.setRows((prev) => prev.map((d) => (d.id === docId ? { ...d, ...patch } : d)));
-  notify(`Payment of TZS ${money(payment.amount)}k recorded for ${docId}${payment.reference ? " (ref: " + payment.reference + ")" : ""}`);
+  notify(
+    `Payment of TZS ${money(payment.amount)}k recorded for ${docId}${payment.reference ? " (ref: " + payment.reference + ")" : ""}`,
+  );
 
   // Auto-receipt: when a payment brings the invoice to fully Paid, generate
   // the receipt immediately and push it to the receiptBus so any open
@@ -87,13 +101,29 @@ export function recordPayment(invoicesHook, docId, payment, actor) {
     };
     receiptBus.push(receipt);
   }
-  logAudit(newStatus === "Paid" ? "Invoice paid in full" : "Partial payment recorded", "Finance", actor, `${docId} — TZS ${money(payment.amount)}k via ${payment.method}${payment.reference ? " (" + payment.reference + ")" : ""}`);
+  logAudit(
+    newStatus === "Paid" ? "Invoice paid in full" : "Partial payment recorded",
+    "Finance",
+    actor,
+    `${docId} — TZS ${money(payment.amount)}k via ${payment.method}${payment.reference ? " (" + payment.reference + ")" : ""}`,
+  );
 
   if (IS_CONFIGURED && inv.dbId) {
     (async () => {
       try {
-        await sb("sales_payments").insert({ invoice_id: inv.dbId, amount: payment.amount, method: payment.method, payment_date: payment.date, reference: payment.reference || null }).run();
-        await sb("sales_invoices").eq("id", inv.dbId).update({ amount_paid: newAmountPaid, status: newStatus }).run();
+        await sb("sales_payments")
+          .insert({
+            invoice_id: inv.dbId,
+            amount: payment.amount,
+            method: payment.method,
+            payment_date: payment.date,
+            reference: payment.reference || null,
+          })
+          .run();
+        await sb("sales_invoices")
+          .eq("id", inv.dbId)
+          .update({ amount_paid: newAmountPaid, status: newStatus })
+          .run();
       } catch (e) {
         notify("Payment recorded locally, but the server update failed.", "error");
       }
@@ -108,8 +138,16 @@ export function recordPayment(invoicesHook, docId, payment, actor) {
 // Covers this app's actual East African market plus the other regions
 // its currency and signup-country lists already support (section 32).
 export const COMPANY_TIMEZONES = [
-  "Africa/Dar_es_Salaam", "Africa/Nairobi", "Africa/Kampala", "Africa/Kigali", "Africa/Lusaka",
-  "Africa/Lagos", "Europe/London", "America/New_York", "Asia/Dubai", "UTC",
+  "Africa/Dar_es_Salaam",
+  "Africa/Nairobi",
+  "Africa/Kampala",
+  "Africa/Kigali",
+  "Africa/Lusaka",
+  "Africa/Lagos",
+  "Europe/London",
+  "America/New_York",
+  "Asia/Dubai",
+  "UTC",
 ];
 
 // Real timezone-aware formatting via the browser's own Intl API — no
@@ -120,10 +158,16 @@ export const COMPANY_TIMEZONES = [
 // options (hour, minute, etc.) in the same call, so the defaults only
 // apply when the caller hasn't specified its own components.
 export function formatInTimezone(dateInput, timezone, options = {}) {
-  const hasComponentOptions = ["hour", "minute", "second", "year", "month", "day", "weekday"].some((k) => k in options);
+  const hasComponentOptions = ["hour", "minute", "second", "year", "month", "day", "weekday"].some(
+    (k) => k in options,
+  );
   const base = hasComponentOptions ? {} : { dateStyle: "medium", timeStyle: "short" };
   try {
-    return new Intl.DateTimeFormat("en-GB", { timeZone: timezone || "UTC", ...base, ...options }).format(new Date(dateInput));
+    return new Intl.DateTimeFormat("en-GB", {
+      timeZone: timezone || "UTC",
+      ...base,
+      ...options,
+    }).format(new Date(dateInput));
   } catch (_e) {
     return new Date(dateInput).toLocaleString();
   }
@@ -137,19 +181,57 @@ export function formatInTimezone(dateInput, timezone, options = {}) {
 // everywhere), so the caller multiplies by 1000 before converting —
 // this function itself works on the real, full currency amount.
 export function numberToWords(n) {
-  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
 
   function belowThousand(num) {
     if (num === 0) return "";
     if (num < 20) return ones[num];
     if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "");
-    return ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " " + belowThousand(num % 100) : "");
+    return (
+      ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " " + belowThousand(num % 100) : "")
+    );
   }
 
   if (n === 0) return "Zero";
-  const units = [["", 1], ["Thousand", 1e3], ["Million", 1e6], ["Billion", 1e9]];
+  const units = [
+    ["", 1],
+    ["Thousand", 1e3],
+    ["Million", 1e6],
+    ["Billion", 1e9],
+  ];
   let remaining = Math.round(Math.abs(n));
   const parts = [];
   for (let i = units.length - 1; i >= 0; i--) {
@@ -180,20 +262,44 @@ export const SUBSCRIPTION_STATUS_COLOR = {
 // recurring part — this is the natural subscription that order implies.
 export const subscriptionsSeed = [
   {
-    id: "SUB-201", customer: "Meridian Logistics", plan: "Fleet GPS Monitoring", amount: 1440, cycle: "Monthly",
-    status: "Active", startDate: "2026-06-01", nextBillingDate: "2026-07-01",
+    id: "SUB-201",
+    customer: "Meridian Logistics",
+    plan: "Fleet GPS Monitoring",
+    amount: 1440,
+    cycle: "Monthly",
+    status: "Active",
+    startDate: "2026-06-01",
+    nextBillingDate: "2026-07-01",
   },
   {
-    id: "SUB-202", customer: "Baraka Hotels & Resorts", plan: "Kitchen Equipment Service Contract", amount: 8500, cycle: "Quarterly",
-    status: "Active", startDate: "2026-04-15", nextBillingDate: "2026-07-15",
+    id: "SUB-202",
+    customer: "Baraka Hotels & Resorts",
+    plan: "Kitchen Equipment Service Contract",
+    amount: 8500,
+    cycle: "Quarterly",
+    status: "Active",
+    startDate: "2026-04-15",
+    nextBillingDate: "2026-07-15",
   },
   {
-    id: "SUB-203", customer: "Nyota Pharmacy Group", plan: "Cold-Chain Maintenance Plan", amount: 21000, cycle: "Annual",
-    status: "Active", startDate: "2026-01-10", nextBillingDate: "2027-01-10",
+    id: "SUB-203",
+    customer: "Nyota Pharmacy Group",
+    plan: "Cold-Chain Maintenance Plan",
+    amount: 21000,
+    cycle: "Annual",
+    status: "Active",
+    startDate: "2026-01-10",
+    nextBillingDate: "2027-01-10",
   },
   {
-    id: "SUB-204", customer: "Uzuri Beauty Chain", plan: "Salon Equipment Warranty Plus", amount: 950, cycle: "Monthly",
-    status: "Paused", startDate: "2026-05-01", nextBillingDate: "2026-07-01",
+    id: "SUB-204",
+    customer: "Uzuri Beauty Chain",
+    plan: "Salon Equipment Warranty Plus",
+    amount: 950,
+    cycle: "Monthly",
+    status: "Paused",
+    startDate: "2026-05-01",
+    nextBillingDate: "2026-07-01",
   },
 ];
 

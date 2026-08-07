@@ -19,10 +19,28 @@
 import { decryptRow } from "./crypto.jsx";
 import { STORE_CONFLICTS, getMeta, put, setMeta } from "./idb.jsx";
 import {
-  DONE, FAILED, MAX_ATTEMPTS, OP_DELETE, OP_INSERT, OP_UPDATE, QUEUED, SYNCING,
-  backoffMs, pendingEntries, queueStats, removeEntry, updateEntry,
+  DONE,
+  FAILED,
+  MAX_ATTEMPTS,
+  OP_DELETE,
+  OP_INSERT,
+  OP_UPDATE,
+  QUEUED,
+  SYNCING,
+  backoffMs,
+  pendingEntries,
+  queueStats,
+  removeEntry,
+  updateEntry,
 } from "./outbox.jsx";
-import { PENDING, SYNCED, cacheRemoteRows, hardDelete, markRecordState, recordKey } from "./store.jsx";
+import {
+  PENDING,
+  SYNCED,
+  cacheRemoteRows,
+  hardDelete,
+  markRecordState,
+  recordKey,
+} from "./store.jsx";
 
 const listeners = new Set();
 const RETRY_TICK_MS = 20_000;
@@ -53,7 +71,13 @@ function computeMode() {
 function emit() {
   state.mode = computeMode();
   const snapshot = { ...state };
-  listeners.forEach((fn) => { try { fn(snapshot); } catch (_e) { /* a bad subscriber must not stop sync */ } });
+  listeners.forEach((fn) => {
+    try {
+      fn(snapshot);
+    } catch (_e) {
+      /* a bad subscriber must not stop sync */
+    }
+  });
 }
 
 export function subscribe(fn) {
@@ -99,23 +123,33 @@ export async function refreshCounters() {
     state.pending = stats.pending;
     state.failed = stats.failed;
     emit();
-  } catch (_e) { /* counters are cosmetic */ }
+  } catch (_e) {
+    /* counters are cosmetic */
+  }
 }
 
 function scheduleDrain(delay) {
   if (!enabled || timer) return;
-  timer = setTimeout(() => { timer = null; drain().catch(() => {}); }, delay);
+  timer = setTimeout(() => {
+    timer = null;
+    drain().catch(() => {});
+  }, delay);
 }
 
 async function recordConflict(entry, remote, resolution) {
   try {
     await put(STORE_CONFLICTS, {
-      table: entry.table, recordId: entry.recordId, resolution,
+      table: entry.table,
+      recordId: entry.recordId,
+      resolution,
       remoteUpdatedAt: remote?.updated_at || null,
-      localBase: entry.baseUpdatedAt, at: new Date().toISOString(),
+      localBase: entry.baseUpdatedAt,
+      at: new Date().toISOString(),
     });
     state.conflicts += 1;
-  } catch (_e) { /* conflict log is advisory */ }
+  } catch (_e) {
+    /* conflict log is advisory */
+  }
 }
 
 async function sendInsert(entry) {
@@ -130,17 +164,34 @@ async function sendUpdate(entry) {
   const patch = await decryptRow(entry.payload);
   let remote = null;
   try {
-    const rows = await transport({ table: entry.table, method: "GET", filters: entry.filters, select: "*" });
+    const rows = await transport({
+      table: entry.table,
+      method: "GET",
+      filters: entry.filters,
+      select: "*",
+    });
     remote = Array.isArray(rows) ? rows[0] : rows;
-  } catch (_e) { /* if the pre-read fails, fall through to a plain patch */ }
+  } catch (_e) {
+    /* if the pre-read fails, fall through to a plain patch */
+  }
 
-  if (remote && entry.baseUpdatedAt && remote.updated_at && remote.updated_at > entry.baseUpdatedAt) {
+  if (
+    remote &&
+    entry.baseUpdatedAt &&
+    remote.updated_at &&
+    remote.updated_at > entry.baseUpdatedAt
+  ) {
     // Cloud row moved on since this edit was captured. Replaying only the
     // changed columns keeps the remote's newer values for everything else.
     await recordConflict(entry, remote, "field-merge");
   }
 
-  const rows = await transport({ table: entry.table, method: "PATCH", filters: entry.filters, body: patch });
+  const rows = await transport({
+    table: entry.table,
+    method: "PATCH",
+    filters: entry.filters,
+    body: patch,
+  });
   const saved = Array.isArray(rows) ? rows[0] : rows;
   if (saved) await cacheRemoteRows(entry.table, saved);
   if (entry.recordId) await markRecordState(recordKey(entry.table, entry.recordId), SYNCED);
@@ -162,12 +213,22 @@ function isPermanent(error) {
   const status = error?.status;
   // 4xx other than auth/timeout won't succeed on retry: the payload itself is
   // rejected (missing column, constraint violation, RLS denial).
-  return typeof status === "number" && status >= 400 && status < 500 && status !== 401 && status !== 408 && status !== 429;
+  return (
+    typeof status === "number" &&
+    status >= 400 &&
+    status < 500 &&
+    status !== 401 &&
+    status !== 408 &&
+    status !== 429
+  );
 }
 
 export async function drain({ manual = false } = {}) {
   if (!transport || draining) return getStatus();
-  if (!manual && Date.now() < nextAttemptAt) { scheduleDrain(RETRY_TICK_MS); return getStatus(); }
+  if (!manual && Date.now() < nextAttemptAt) {
+    scheduleDrain(RETRY_TICK_MS);
+    return getStatus();
+  }
   if (!state.online && !manual) return getStatus();
 
   draining = true;
@@ -177,7 +238,9 @@ export async function drain({ manual = false } = {}) {
   try {
     entries = await pendingEntries();
   } catch (_e) {
-    draining = false; state.syncing = false; emit();
+    draining = false;
+    state.syncing = false;
+    emit();
     return getStatus();
   }
 
@@ -188,7 +251,11 @@ export async function drain({ manual = false } = {}) {
     await updateEntry(entry.seq, { status: SYNCING });
     try {
       await sendEntry(entry);
-      await updateEntry(entry.seq, { status: DONE, syncedAt: new Date().toISOString(), lastError: null });
+      await updateEntry(entry.seq, {
+        status: DONE,
+        syncedAt: new Date().toISOString(),
+        lastError: null,
+      });
       await removeEntry(entry.seq);
       reportBackendSuccess();
     } catch (error) {
@@ -241,7 +308,10 @@ export async function start() {
       emit();
       scheduleDrain(500);
     });
-    window.addEventListener("offline", () => { state.online = false; emit(); });
+    window.addEventListener("offline", () => {
+      state.online = false;
+      emit();
+    });
     // Coming back to a tab after sleep is the most common moment for a queue
     // to be drainable again without any online/offline event firing.
     document.addEventListener("visibilitychange", () => {
@@ -254,5 +324,8 @@ export async function start() {
 
 export function stop() {
   enabled = false;
-  if (timer) { clearTimeout(timer); timer = null; }
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
 }

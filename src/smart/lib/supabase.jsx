@@ -10,8 +10,7 @@ import * as offline from "./offline/index.jsx";
 
 const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
 
-export const SUPABASE_URL =
-  ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
+export const SUPABASE_URL = ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
 
 export const SUPABASE_ANON_KEY =
   ENV.VITE_SUPABASE_ANON_KEY ||
@@ -22,10 +21,14 @@ export const IS_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 /* Mutable module state — writers must use the setter, never `DEMO_OVERRIDE = x`,
    because ES modules forbid assigning to an imported binding. */
 export let DEMO_OVERRIDE = false;
-export function setDemoOverride(v) { DEMO_OVERRIDE = v; }
+export function setDemoOverride(v) {
+  DEMO_OVERRIDE = v;
+}
 
 export function authHeaders() {
-  const token = (typeof window !== "undefined" && window.localStorage?.getItem("bs_access_token")) || SUPABASE_ANON_KEY;
+  const token =
+    (typeof window !== "undefined" && window.localStorage?.getItem("bs_access_token")) ||
+    SUPABASE_ANON_KEY;
   return {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${token}`,
@@ -57,7 +60,8 @@ export async function authSignIn(email, password) {
     body: JSON.stringify({ email, password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.msg || "Incorrect email or password.");
+  if (!res.ok)
+    throw new Error(data.error_description || data.msg || "Incorrect email or password.");
   return data; // { access_token, refresh_token, user }
 }
 
@@ -67,7 +71,9 @@ export async function authSignOut(accessToken) {
       method: "POST",
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
     });
-  } catch (_e) { /* the local session is cleared regardless of whether the server call succeeds */ }
+  } catch (_e) {
+    /* the local session is cleared regardless of whether the server call succeeds */
+  }
 }
 
 // Identifies who a stored access token actually belongs to — the real
@@ -92,7 +98,8 @@ export async function authGetUser(accessToken) {
 // Apple requires a paid Apple Developer account, the one provider here
 // with a real cost attached before it can be turned on at all.
 export function authSignInWithOAuth(provider) {
-  const redirectTo = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+  const redirectTo =
+    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}`;
 }
 
@@ -103,7 +110,11 @@ export function authSignInWithOAuth(provider) {
 export async function callRpc(name, params, accessToken) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify(params),
   });
   const data = await res.json();
@@ -116,8 +127,8 @@ export async function callRpc(name, params, accessToken) {
    read; once a shape is proven unsupported we remember it so remounting a
    module doesn't re-issue a request we already know will fail. */
 const SELECT_FALLBACK = new Map(); // "table|select" → working select string
-const ORDERLESS = new Set();       // tables whose sort column doesn't exist
-const DEAD_TABLES = new Set();     // tables absent from this project
+const ORDERLESS = new Set(); // tables whose sort column doesn't exist
+const DEAD_TABLES = new Set(); // tables absent from this project
 
 const REQUEST_TIMEOUT_MS = 12_000;
 
@@ -129,7 +140,10 @@ function parseFilters(search) {
   for (const [col, raw] of search.entries()) {
     if (col === "select" || col === "order" || col === "limit" || col === "offset") continue;
     const idx = String(raw).indexOf(".");
-    if (idx === -1) { filters.push({ col, op: "eq", val: String(raw) }); continue; }
+    if (idx === -1) {
+      filters.push({ col, op: "eq", val: String(raw) });
+      continue;
+    }
     filters.push({ col, op: raw.slice(0, idx), val: raw.slice(idx + 1) });
   }
   return filters;
@@ -146,10 +160,24 @@ function filtersToSearch(filters = []) {
    definite rejection of the payload itself (4xx that isn't auth/throttling)
    is a real error the caller should see. */
 function isBackendUnreachable(status) {
-  return status == null || status >= 500 || status === 401 || status === 403 || status === 408 || status === 429;
+  return (
+    status == null ||
+    status >= 500 ||
+    status === 401 ||
+    status === 403 ||
+    status === 408 ||
+    status === 429
+  );
 }
 
-async function rawRequest({ table, method = "GET", filters = [], body = null, select = null, order = null }) {
+async function rawRequest({
+  table,
+  method = "GET",
+  filters = [],
+  body = null,
+  select = null,
+  order = null,
+}) {
   const search = filtersToSearch(filters);
   if (select) search.set("select", select);
   if (order) search.set("order", order);
@@ -164,7 +192,11 @@ async function rawRequest({ table, method = "GET", filters = [], body = null, se
     });
     if (!res.ok) {
       let err = {};
-      try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
+      try {
+        err = await res.json();
+      } catch (_e) {
+        /* non-JSON error body */
+      }
       const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
       error.status = res.status;
       error.code = err.code;
@@ -200,11 +232,16 @@ export function sb(table) {
   // relations like "pos_returns(*,pos_return_items(*))" stay intact.
   function splitSelect(sel) {
     const out = [];
-    let depth = 0, cur = "";
+    let depth = 0,
+      cur = "";
     for (const ch of sel) {
       if (ch === "(") depth++;
       if (ch === ")") depth--;
-      if (ch === "," && depth === 0) { out.push(cur); cur = ""; continue; }
+      if (ch === "," && depth === 0) {
+        out.push(cur);
+        cur = "";
+        continue;
+      }
       cur += ch;
     }
     if (cur) out.push(cur);
@@ -227,9 +264,16 @@ export function sb(table) {
     const filters = parseFilters(search);
     if (method === "POST") {
       const saved = await offline.applyOfflineInsert(table, payload);
-      return single ? (Array.isArray(saved) ? saved[0] : saved) : (Array.isArray(saved) ? saved : [saved]);
+      return single
+        ? Array.isArray(saved)
+          ? saved[0]
+          : saved
+        : Array.isArray(saved)
+          ? saved
+          : [saved];
     }
-    if (method === "PATCH") return shape(await offline.applyOfflineUpdate(table, filters, payload || {}));
+    if (method === "PATCH")
+      return shape(await offline.applyOfflineUpdate(table, filters, payload || {}));
     return shape(await offline.applyOfflineDelete(table, filters));
   }
 
@@ -277,12 +321,19 @@ export function sb(table) {
     }
 
     let err = {};
-    try { err = await res.json(); } catch (_e) { /* non-JSON error body */ }
+    try {
+      err = await res.json();
+    } catch (_e) {
+      /* non-JSON error body */
+    }
 
     // Unresolvable embed (missing child table or foreign key): retry flat.
     const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
     if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
-      const flat = splitSelect(sel).filter((p) => !p.includes("(")).join(",") || "*";
+      const flat =
+        splitSelect(sel)
+          .filter((p) => !p.includes("("))
+          .join(",") || "*";
       SELECT_FALLBACK.set(`${table}|${selectOverride || params.get("select") || "*"}`, flat);
       console.warn(`[supabase] ${table}: unresolved embed dropped — using select "${flat}"`);
       return execute(flat, attempt + 1);
@@ -301,7 +352,9 @@ export function sb(table) {
     // workspace first, because the user may have created rows offline.
     if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
       DEAD_TABLES.add(table);
-      console.warn(`[supabase] ${table}: not present in this project — serving local workspace data.`);
+      console.warn(
+        `[supabase] ${table}: not present in this project — serving local workspace data.`,
+      );
       return localRead(search);
     }
 
@@ -314,7 +367,9 @@ export function sb(table) {
     // restriction) still shouldn't blank a whole module — fall back to the
     // local mirror and note it in the console.
     if (method === "GET") {
-      console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
+      console.warn(
+        `[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`,
+      );
       const local = await localRead(search);
       return Array.isArray(local) && local.length ? local : empty();
     }
@@ -325,7 +380,6 @@ export function sb(table) {
     error.status = res.status;
     throw error;
   }
-
 
   const builder = {
     select(cols = "*") {
@@ -364,8 +418,6 @@ export function sb(table) {
       return execute(params.get("select"), 0);
     },
 
-
-
     // allow `await sb(table).select().eq(...)` directly, like supabase-js
     then(resolve, reject) {
       return builder.run().then(resolve, reject);
@@ -373,4 +425,3 @@ export function sb(table) {
   };
   return builder;
 }
-

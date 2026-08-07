@@ -9,20 +9,81 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const WORKSPACE_MODULES = [
-  { id: "company", label: "Company", prefixes: ["companies", "company_", "profiles", "branches", "audit_log"] },
-  { id: "customers", label: "Customers", prefixes: ["crm_", "customers", "contacts", "leads", "support_", "tickets"] },
-  { id: "suppliers", label: "Suppliers", prefixes: ["suppliers", "vendor", "scm_", "procurement_suppliers"] },
+  {
+    id: "company",
+    label: "Company",
+    prefixes: ["companies", "company_", "profiles", "branches", "audit_log"],
+  },
+  {
+    id: "customers",
+    label: "Customers",
+    prefixes: ["crm_", "customers", "contacts", "leads", "support_", "tickets"],
+  },
+  {
+    id: "suppliers",
+    label: "Suppliers",
+    prefixes: ["suppliers", "vendor", "scm_", "procurement_suppliers"],
+  },
   { id: "inventory", label: "Inventory", prefixes: ["inventory_", "stock", "warehouse"] },
-  { id: "products", label: "Products", prefixes: ["products", "product_", "catalog", "ecommerce_products", "price"] },
-  { id: "sales", label: "Sales", prefixes: ["sales_", "pos_", "quotes", "invoices", "orders", "ecommerce_"] },
+  {
+    id: "products",
+    label: "Products",
+    prefixes: ["products", "product_", "catalog", "ecommerce_products", "price"],
+  },
+  {
+    id: "sales",
+    label: "Sales",
+    prefixes: ["sales_", "pos_", "quotes", "invoices", "orders", "ecommerce_"],
+  },
   { id: "purchases", label: "Purchases", prefixes: ["procurement_", "purchase", "rfq", "goods_"] },
-  { id: "accounting", label: "Accounting", prefixes: ["finance_", "accounting", "ledger", "journal", "tax", "banking_", "payments", "budget"] },
-  { id: "employees", label: "Employees", prefixes: ["hr_employees", "hr_attendance", "hr_leave", "hr_recruit", "hr_candidates", "employees", "hr_"] },
+  {
+    id: "accounting",
+    label: "Accounting",
+    prefixes: [
+      "finance_",
+      "accounting",
+      "ledger",
+      "journal",
+      "tax",
+      "banking_",
+      "payments",
+      "budget",
+    ],
+  },
+  {
+    id: "employees",
+    label: "Employees",
+    prefixes: [
+      "hr_employees",
+      "hr_attendance",
+      "hr_leave",
+      "hr_recruit",
+      "hr_candidates",
+      "employees",
+      "hr_",
+    ],
+  },
   { id: "payroll", label: "Payroll", prefixes: ["payroll", "hr_payroll", "salaries"] },
   { id: "assets", label: "Assets", prefixes: ["assets", "fleet_", "maintenance", "equipment"] },
   { id: "reports", label: "Reports", prefixes: ["reports", "analytics_", "dashboards", "kpi"] },
-  { id: "settings", label: "Settings", prefixes: ["settings", "integrations", "workflows", "notifications", "notification_", "roles", "permissions"] },
-  { id: "attachments", label: "Attachments", prefixes: ["documents", "document_", "files", "attachments", "scans"] },
+  {
+    id: "settings",
+    label: "Settings",
+    prefixes: [
+      "settings",
+      "integrations",
+      "workflows",
+      "notifications",
+      "notification_",
+      "roles",
+      "permissions",
+    ],
+  },
+  {
+    id: "attachments",
+    label: "Attachments",
+    prefixes: ["documents", "document_", "files", "attachments", "scans"],
+  },
   { id: "other", label: "Other", prefixes: [] },
 ];
 
@@ -54,12 +115,35 @@ export function moduleLabel(id) {
    is by exact name or suffix, so `api_key`, `stripe_secret`, `id_number` and
    `net_salary` are all covered without enumerating every table's columns. */
 const SENSITIVE_EXACT = new Set([
-  "password", "pin", "pin_hash", "token", "secret", "salary", "net_salary", "gross_salary",
-  "tin", "nida", "id_number", "account_number", "iban", "card_number", "cvv", "ssn",
+  "password",
+  "pin",
+  "pin_hash",
+  "token",
+  "secret",
+  "salary",
+  "net_salary",
+  "gross_salary",
+  "tin",
+  "nida",
+  "id_number",
+  "account_number",
+  "iban",
+  "card_number",
+  "cvv",
+  "ssn",
 ]);
 const SENSITIVE_SUFFIX = [
-  "_password", "_pin", "_token", "_secret", "_key", "_salary", "_tin", "_iban",
-  "_account_number", "_card_number", "_id_number",
+  "_password",
+  "_pin",
+  "_token",
+  "_secret",
+  "_key",
+  "_salary",
+  "_tin",
+  "_iban",
+  "_account_number",
+  "_card_number",
+  "_id_number",
 ];
 
 export function isSensitiveField(name) {

@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import {} from "lucide-react";
 export const money = (n) => new Intl.NumberFormat("en-US").format(n);
 
 // Was a hardcoded Tanzania-only constant (0.18, "standard VAT") — the
@@ -82,7 +82,7 @@ export const TODAY = new Date("2026-07-02");
 // generate_doc_number() RPC follows the same pattern for the persisted copy.
 export function docId(prefix) {
   const d = new Date();
-  const date = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-  const hex = (d.getTime() % 65536).toString(16).toUpperCase().padStart(4,'0');
+  const date = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  const hex = (d.getTime() % 65536).toString(16).toUpperCase().padStart(4, "0");
   return `${prefix}-${date}-${hex}`;
 }

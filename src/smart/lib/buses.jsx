@@ -1,9 +1,11 @@
-import {  } from "lucide-react";
+import {} from "lucide-react";
 import { IS_CONFIGURED, sb } from "../lib/supabase.jsx";
 
 export const toastBus = {
   listeners: new Set(),
-  push(toast) { this.listeners.forEach((fn) => fn(toast)); },
+  push(toast) {
+    this.listeners.forEach((fn) => fn(toast));
+  },
 };
 
 // Global confirmation dialog bus — the missing safety net across all 22
@@ -28,12 +30,16 @@ export function confirmAction(message, onConfirm, opts = {}) {
 // consumer) receives the receipt immediately without prop-drilling.
 export const receiptBus = {
   listeners: new Set(),
-  push(receipt) { this.listeners.forEach((fn) => fn(receipt)); },
+  push(receipt) {
+    this.listeners.forEach((fn) => fn(receipt));
+  },
 };
 
 export const auditBus = {
   listeners: new Set(),
-  push(entry) { this.listeners.forEach((fn) => fn(entry)); },
+  push(entry) {
+    this.listeners.forEach((fn) => fn(entry));
+  },
 };
 
 // AuditService — a real, centralized log of significant actions across the
@@ -57,14 +63,25 @@ export const auditBus = {
 export function logAudit(action, module, actor, details) {
   const entry = {
     id: `AUD-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    action, module, actor: actor || "Unattributed", details: details || "",
+    action,
+    module,
+    actor: actor || "Unattributed",
+    details: details || "",
     timestamp: new Date().toISOString(),
   };
   auditBus.push(entry);
   if (IS_CONFIGURED) {
-    sb("audit_log").insert({ action, module, actor: entry.actor, details: entry.details }).run().catch(() => {});
+    sb("audit_log")
+      .insert({ action, module, actor: entry.actor, details: entry.details })
+      .run()
+      .catch(() => {});
   }
 }
 
 // Global whatsapp message bus so other modules can open WA center pre-loaded
-export const waBus = { listeners: new Set(), push(payload) { this.listeners.forEach(fn=>fn(payload)); } };
+export const waBus = {
+  listeners: new Set(),
+  push(payload) {
+    this.listeners.forEach((fn) => fn(payload));
+  },
+};

@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import {} from "lucide-react";
 import { TODAY } from "../lib/format.jsx";
 
 /* ══════════════ PROCUREMENT DATA ══════════════ */
@@ -9,7 +9,6 @@ import { TODAY } from "../lib/format.jsx";
 // through the Approvals tab, which is gated to Owner/Admin the same way
 // Settings already is.
 export const PO_APPROVAL_THRESHOLD = 5000; // TZS 000
-
 
 export const PO_STATUS_COLOR = {
   Draft: "#5B6472",
@@ -22,28 +21,48 @@ export const PO_STATUS_COLOR = {
 
 export const purchaseOrdersSeed = [
   {
-    id: "PO-3401", supplier: "Tanzania Portland Cement Co.", status: "Approved",
-    orderDate: "2026-06-28", expectedDate: "2026-07-05", requestedBy: "Grace Mmbaga",
+    id: "PO-3401",
+    supplier: "Tanzania Portland Cement Co.",
+    status: "Approved",
+    orderDate: "2026-06-28",
+    expectedDate: "2026-07-05",
+    requestedBy: "Grace Mmbaga",
     items: [{ sku: "HDW-2203", name: "Cement 50kg bag", qty: 500, cost: 14.8 }],
   },
   {
-    id: "PO-3400", supplier: "Coastal Steel & Hardware Ltd", status: "Pending Approval",
-    orderDate: "2026-07-01", expectedDate: "2026-07-15", requestedBy: "David Chen",
+    id: "PO-3400",
+    supplier: "Coastal Steel & Hardware Ltd",
+    status: "Pending Approval",
+    orderDate: "2026-07-01",
+    expectedDate: "2026-07-15",
+    requestedBy: "David Chen",
     items: [{ sku: "HDW-2202", name: "Steel reinforcement bar 12mm (ton)", qty: 8, cost: 1450 }],
   },
   {
-    id: "PO-3399", supplier: "Zanzibar Electronics Imports", status: "Received",
-    orderDate: "2026-06-15", expectedDate: "2026-06-29", requestedBy: "S. Kileo",
+    id: "PO-3399",
+    supplier: "Zanzibar Electronics Imports",
+    status: "Received",
+    orderDate: "2026-06-15",
+    expectedDate: "2026-06-29",
+    requestedBy: "S. Kileo",
     items: [{ sku: "HDW-2204", name: "Fleet GPS tracking unit", qty: 30, cost: 105 }],
   },
   {
-    id: "PO-3398", supplier: "Furniture Craft Tanzania", status: "Paid",
-    orderDate: "2026-06-01", expectedDate: "2026-06-14", requestedBy: "J. Batenga",
+    id: "PO-3398",
+    supplier: "Furniture Craft Tanzania",
+    status: "Paid",
+    orderDate: "2026-06-01",
+    expectedDate: "2026-06-14",
+    requestedBy: "J. Batenga",
     items: [{ sku: "HDW-2205", name: "Salon styling chair", qty: 20, cost: 150 }],
   },
   {
-    id: "PO-3397", supplier: "Coastal Steel & Hardware Ltd", status: "Draft",
-    orderDate: "2026-07-02", expectedDate: null, requestedBy: "Grace Mmbaga",
+    id: "PO-3397",
+    supplier: "Coastal Steel & Hardware Ltd",
+    status: "Draft",
+    orderDate: "2026-07-02",
+    expectedDate: null,
+    requestedBy: "Grace Mmbaga",
     items: [{ sku: "HDW-2207", name: "Warehouse shelving unit", qty: 40, cost: 72 }],
   },
 ];
@@ -64,10 +83,38 @@ export function contractStatus(endDate) {
   return "Active";
 }
 
-export const CONTRACT_STATUS_COLOR = { Active: "#16A34A", "Expiring Soon": "#F59E0B", Expired: "#EF4444" };
+export const CONTRACT_STATUS_COLOR = {
+  Active: "#16A34A",
+  "Expiring Soon": "#F59E0B",
+  Expired: "#EF4444",
+};
 
 export const procurementContractsSeed = [
-  { id: "PC-01", supplier: "Tanzania Portland Cement Co.", type: "Framework Agreement", startDate: "2025-01-01", endDate: null, value: 180000, notes: "Standing supply agreement, no fixed end date" },
-  { id: "PC-02", supplier: "Coastal Steel & Hardware Ltd", type: "Fixed-term Supply", startDate: "2026-01-01", endDate: "2026-07-31", value: 42000, notes: "Annual steel supply contract, up for renewal" },
-  { id: "PC-03", supplier: "Zanzibar Electronics Imports", type: "One-time", startDate: "2026-06-01", endDate: "2026-06-30", value: 3150, notes: "GPS unit bulk order" },
+  {
+    id: "PC-01",
+    supplier: "Tanzania Portland Cement Co.",
+    type: "Framework Agreement",
+    startDate: "2025-01-01",
+    endDate: null,
+    value: 180000,
+    notes: "Standing supply agreement, no fixed end date",
+  },
+  {
+    id: "PC-02",
+    supplier: "Coastal Steel & Hardware Ltd",
+    type: "Fixed-term Supply",
+    startDate: "2026-01-01",
+    endDate: "2026-07-31",
+    value: 42000,
+    notes: "Annual steel supply contract, up for renewal",
+  },
+  {
+    id: "PC-03",
+    supplier: "Zanzibar Electronics Imports",
+    type: "One-time",
+    startDate: "2026-06-01",
+    endDate: "2026-06-30",
+    value: 3150,
+    notes: "GPS unit bulk order",
+  },
 ];

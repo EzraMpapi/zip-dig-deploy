@@ -52,7 +52,13 @@ async function getKey() {
   keyPromise = (async () => {
     const api = subtle();
     if (!api) return null;
-    const material = await api.importKey("raw", new TextEncoder().encode(`sm::${workspace}`), "PBKDF2", false, ["deriveKey"]);
+    const material = await api.importKey(
+      "raw",
+      new TextEncoder().encode(`sm::${workspace}`),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
     return api.deriveKey(
       { name: "PBKDF2", salt: await deviceSalt(), iterations: ITERATIONS, hash: "SHA-256" },
       material,
@@ -82,7 +88,11 @@ async function decryptValue(text) {
   const key = await getKey();
   if (!key) return null;
   const [ivPart, cipherPart] = text.slice(PREFIX.length).split(":");
-  const plain = await subtle().decrypt({ name: "AES-GCM", iv: fromB64(ivPart) }, key, fromB64(cipherPart));
+  const plain = await subtle().decrypt(
+    { name: "AES-GCM", iv: fromB64(ivPart) },
+    key,
+    fromB64(cipherPart),
+  );
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
@@ -99,7 +109,11 @@ export async function encryptRow(row) {
   for (const [field, value] of Object.entries(out)) {
     if (value == null || isCipherText(value)) continue;
     if (!isSensitiveField(field)) continue;
-    try { out[field] = await encryptValue(value); } catch (_e) { /* store plaintext rather than lose the write */ }
+    try {
+      out[field] = await encryptValue(value);
+    } catch (_e) {
+      /* store plaintext rather than lose the write */
+    }
   }
   return out;
 }

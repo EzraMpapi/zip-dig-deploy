@@ -1,5 +1,18 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Fingerprint, Icon, LoaderCircle, Lock, Package, Plus, Search, Trash2, UploadCloud, Users, X } from "lucide-react";
+import {
+  CheckCircle2,
+  Fingerprint,
+  Icon,
+  LoaderCircle,
+  Lock,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+  UploadCloud,
+  Users,
+  X,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import { BrandMark } from "../components/BrandMark.jsx";
 import { COMPANY_CATEGORIES } from "../data/core.jsx";
@@ -10,7 +23,8 @@ export function FormField({ label, required, children }) {
   return (
     <div>
       <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-        {label}{required && <span className="text-[#EF4444]"> *</span>}
+        {label}
+        {required && <span className="text-[#EF4444]"> *</span>}
       </label>
       {children}
     </div>
@@ -33,7 +47,9 @@ export function CategoryPicker({ value, onChange }) {
       <div className="relative mb-2">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
-          value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search category"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search category"
           className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-[13px] outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all"
         />
       </div>
@@ -42,24 +58,35 @@ export function CategoryPicker({ value, onChange }) {
           const active = value === cat;
           return (
             <button
-              key={cat} type="button" onClick={() => onChange(cat)}
+              key={cat}
+              type="button"
+              onClick={() => onChange(cat)}
               className="w-full flex items-center justify-between px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50"
               style={active ? { backgroundColor: "#DCFCE7" } : undefined}
             >
-              <span className={`text-[13px] ${active ? "font-medium text-[#111827]" : "text-slate-600"}`}>{cat}</span>
-              <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${active ? "border-[#16A34A]" : "border-slate-300"}`}>
+              <span
+                className={`text-[13px] ${active ? "font-medium text-[#111827]" : "text-slate-600"}`}
+              >
+                {cat}
+              </span>
+              <span
+                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${active ? "border-[#16A34A]" : "border-slate-300"}`}
+              >
                 {active && <span className="w-2 h-2 rounded-full bg-[#16A34A]" />}
               </span>
             </button>
           );
         })}
-        {filtered.length === 0 && <p className="text-[12px] text-slate-400 text-center py-4">No matching category.</p>}
+        {filtered.length === 0 && (
+          <p className="text-[12px] text-slate-400 text-center py-4">No matching category.</p>
+        )}
       </div>
     </div>
   );
 }
 
-export const inputClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] text-[#111827] placeholder-slate-400 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 focus:shadow-sm transition-all";
+export const inputClass =
+  "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] text-[#111827] placeholder-slate-400 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 focus:shadow-sm transition-all";
 
 // Real Excel/CSV import for Customers and Products — genuinely built to
 // close a specific, verified competitive gap: SokoBook's own advertised
@@ -73,28 +100,53 @@ export const inputClass = "w-full bg-white border border-slate-200 rounded-xl px
 // accept a spreadsheet and silently does nothing with it.
 export const IMPORT_FIELD_MAP = {
   customers: {
-    tableLabel: "Customers", icon: Users,
+    tableLabel: "Customers",
+    icon: Users,
     fields: [
-      { key: "contact_name", label: "Contact Name", aliases: ["name", "contact", "contactname", "customer", "customername", "fullname"] },
-      { key: "company_name", label: "Company", aliases: ["company", "companyname", "business", "businessname"] },
+      {
+        key: "contact_name",
+        label: "Contact Name",
+        aliases: ["name", "contact", "contactname", "customer", "customername", "fullname"],
+      },
+      {
+        key: "company_name",
+        label: "Company",
+        aliases: ["company", "companyname", "business", "businessname"],
+      },
       { key: "email", label: "Email", aliases: ["email", "emailaddress"] },
-      { key: "phone", label: "Phone", aliases: ["phone", "phonenumber", "mobile", "tel", "telephone"] },
+      {
+        key: "phone",
+        label: "Phone",
+        aliases: ["phone", "phonenumber", "mobile", "tel", "telephone"],
+      },
     ],
   },
   products: {
-    tableLabel: "Products", icon: Package,
+    tableLabel: "Products",
+    icon: Package,
     fields: [
-      { key: "name", label: "Product Name", aliases: ["name", "product", "productname", "item", "itemname", "description"] },
+      {
+        key: "name",
+        label: "Product Name",
+        aliases: ["name", "product", "productname", "item", "itemname", "description"],
+      },
       { key: "sku", label: "SKU", aliases: ["sku", "code", "itemcode", "productcode"] },
       { key: "category", label: "Category", aliases: ["category", "type", "group"] },
-      { key: "qty_on_hand", label: "Quantity", aliases: ["quantity", "qty", "stock", "qtyonhand", "onhand"] },
+      {
+        key: "qty_on_hand",
+        label: "Quantity",
+        aliases: ["quantity", "qty", "stock", "qtyonhand", "onhand"],
+      },
       { key: "unit_cost", label: "Unit Cost", aliases: ["cost", "unitcost", "price", "unitprice"] },
     ],
   },
 };
 
-export function normalizeHeader(h) { return String(h || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
-
+export function normalizeHeader(h) {
+  return String(h || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
 
 export function DataImportPanel({ type, onClose, onImport }) {
   const config = IMPORT_FIELD_MAP[type];
@@ -115,7 +167,10 @@ export function DataImportPanel({ type, onClose, onImport }) {
         const workbook = XLSX.read(evt.target.result, { type: "binary" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const raw = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        if (raw.length === 0) { setError("This file has no rows to import."); return; }
+        if (raw.length === 0) {
+          setError("This file has no rows to import.");
+          return;
+        }
 
         // Real auto-detection: match each target field against whatever
         // headers the file actually has, ignoring case/spacing/punctuation
@@ -123,17 +178,29 @@ export function DataImportPanel({ type, onClose, onImport }) {
         const sourceHeaders = Object.keys(raw[0]);
         const headerMap = {};
         config.fields.forEach((f) => {
-          const match = sourceHeaders.find((h) => f.aliases.includes(normalizeHeader(h)) || normalizeHeader(h) === normalizeHeader(f.label));
+          const match = sourceHeaders.find(
+            (h) =>
+              f.aliases.includes(normalizeHeader(h)) ||
+              normalizeHeader(h) === normalizeHeader(f.label),
+          );
           if (match) headerMap[f.key] = match;
         });
 
-        const mapped = raw.map((r) => {
-          const out = {};
-          config.fields.forEach((f) => { out[f.key] = headerMap[f.key] ? r[headerMap[f.key]] : ""; });
-          return out;
-        }).filter((r) => Object.values(r).some((v) => String(v).trim() !== ""));
+        const mapped = raw
+          .map((r) => {
+            const out = {};
+            config.fields.forEach((f) => {
+              out[f.key] = headerMap[f.key] ? r[headerMap[f.key]] : "";
+            });
+            return out;
+          })
+          .filter((r) => Object.values(r).some((v) => String(v).trim() !== ""));
 
-        setRows({ data: mapped, matchedFields: Object.keys(headerMap).length, totalFields: config.fields.length });
+        setRows({
+          data: mapped,
+          matchedFields: Object.keys(headerMap).length,
+          totalFields: config.fields.length,
+        });
       } catch (_e) {
         setError("Couldn't read this file — make sure it's a real .xlsx, .xls, or .csv export.");
       }
@@ -158,26 +225,60 @@ export function DataImportPanel({ type, onClose, onImport }) {
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
       <div className="absolute inset-0 bg-[#111827]/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative w-full sm:w-[480px] bg-white h-full shadow-2xl overflow-y-auto flex flex-col" style={{ animation: "slideIn .15s ease-out" }}>
+      <div
+        className="relative w-full sm:w-[480px] bg-white h-full shadow-2xl overflow-y-auto flex flex-col"
+        style={{ animation: "slideIn .15s ease-out" }}
+      >
         <div className="px-6 pt-6 pb-5 border-b border-slate-100 flex items-start justify-between">
-          <div><p className="text-[11px] text-slate-400 uppercase tracking-wide">Data Import</p><h2 className="text-[18px] font-semibold text-[#111827] mt-0.5">Import {config.tableLabel}</h2></div>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close"><X size={18} /></button>
+          <div>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Data Import</p>
+            <h2 className="text-[18px] font-semibold text-[#111827] mt-0.5">
+              Import {config.tableLabel}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className="px-6 py-5 flex-1 space-y-4">
           {imported > 0 ? (
             <div className="text-center py-10">
-              <div className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center mb-3" style={{ backgroundColor: "#DCFCE7" }}><CheckCircle2 size={22} className="text-[#16A34A]" /></div>
-              <p className="text-[15px] font-semibold text-[#111827] mb-1">{imported} {config.tableLabel.toLowerCase()} imported</p>
-              <p className="text-[12.5px] text-slate-500">They're already real records — check {type === "customers" ? "CRM" : "Inventory"} now.</p>
+              <div
+                className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center mb-3"
+                style={{ backgroundColor: "#DCFCE7" }}
+              >
+                <CheckCircle2 size={22} className="text-[#16A34A]" />
+              </div>
+              <p className="text-[15px] font-semibold text-[#111827] mb-1">
+                {imported} {config.tableLabel.toLowerCase()} imported
+              </p>
+              <p className="text-[12.5px] text-slate-500">
+                They're already real records — check {type === "customers" ? "CRM" : "Inventory"}{" "}
+                now.
+              </p>
             </div>
           ) : !rows ? (
             <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
               <UploadCloud size={22} className="text-slate-300 mx-auto mb-2" />
-              <p className="text-[12.5px] text-slate-500 mb-3">Upload a real .xlsx, .xls, or .csv file exported from Excel, Google Sheets, or another system — including SokoBook&apos;s own export, if that&apos;s where you&apos;re coming from.</p>
+              <p className="text-[12.5px] text-slate-500 mb-3">
+                Upload a real .xlsx, .xls, or .csv file exported from Excel, Google Sheets, or
+                another system — including SokoBook&apos;s own export, if that&apos;s where
+                you&apos;re coming from.
+              </p>
               <label className="text-[12.5px] font-medium text-white btn-primary rounded-lg px-4 py-2 cursor-pointer inline-block">
                 Choose File
-                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFile} />
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={handleFile}
+                />
               </label>
               {error && <p className="text-[11.5px] text-[#EF4444] mt-3">{error}</p>}
             </div>
@@ -185,38 +286,88 @@ export function DataImportPanel({ type, onClose, onImport }) {
             <>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-[12.5px] font-medium text-[#111827]">{fileName}</p>
-                <p className="text-[11.5px] text-slate-500 mt-0.5">{rows.data.length} rows found · {rows.matchedFields} of {rows.totalFields} fields auto-matched from your file's headers</p>
+                <p className="text-[11.5px] text-slate-500 mt-0.5">
+                  {rows.data.length} rows found · {rows.matchedFields} of {rows.totalFields} fields
+                  auto-matched from your file's headers
+                </p>
               </div>
               <div>
-                <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">Preview (first 5 rows)</p>
+                <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">
+                  Preview (first 5 rows)
+                </p>
                 <div className="border border-slate-100 rounded-lg overflow-x-auto">
                   <table className="w-full text-[11.5px]">
-                    <thead><tr className="bg-slate-50">{config.fields.map((f) => <th key={f.key} className="px-2.5 py-2 text-left font-medium text-slate-500 whitespace-nowrap">{f.label}</th>)}</tr></thead>
+                    <thead>
+                      <tr className="bg-slate-50">
+                        {config.fields.map((f) => (
+                          <th
+                            key={f.key}
+                            className="px-2.5 py-2 text-left font-medium text-slate-500 whitespace-nowrap"
+                          >
+                            {f.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
                     <tbody>
                       {rows.data.slice(0, 5).map((r, i) => (
-                        <tr key={i} className="border-t border-slate-50">{config.fields.map((f) => <td key={f.key} className="px-2.5 py-2 text-slate-600 whitespace-nowrap max-w-[120px] truncate">{String(r[f.key] || "—")}</td>)}</tr>
+                        <tr key={i} className="border-t border-slate-50">
+                          {config.fields.map((f) => (
+                            <td
+                              key={f.key}
+                              className="px-2.5 py-2 text-slate-600 whitespace-nowrap max-w-[120px] truncate"
+                            >
+                              {String(r[f.key] || "—")}
+                            </td>
+                          ))}
+                        </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
               {error && <p className="text-[11.5px] text-[#EF4444]">{error}</p>}
-              <button onClick={() => setRows(null)} className="text-[11.5px] text-slate-400 hover:text-slate-600">Choose a different file</button>
+              <button
+                onClick={() => setRows(null)}
+                className="text-[11.5px] text-slate-400 hover:text-slate-600"
+              >
+                Choose a different file
+              </button>
             </>
           )}
         </div>
 
         {rows && imported === 0 && (
           <div className="px-6 py-4 border-t border-slate-100 flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50">Cancel</button>
-            <button type="button" onClick={confirmImport} disabled={busy} className="flex-1 text-[12px] font-medium btn-primary text-white rounded-lg py-2.5 flex items-center justify-center gap-2 disabled:opacity-40">
-              {busy ? <LoaderCircle size={14} className="animate-spin" /> : `Import ${rows.data.length} Rows`}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmImport}
+              disabled={busy}
+              className="flex-1 text-[12px] font-medium btn-primary text-white rounded-lg py-2.5 flex items-center justify-center gap-2 disabled:opacity-40"
+            >
+              {busy ? (
+                <LoaderCircle size={14} className="animate-spin" />
+              ) : (
+                `Import ${rows.data.length} Rows`
+              )}
             </button>
           </div>
         )}
         {imported > 0 && (
           <div className="px-6 py-4 border-t border-slate-100">
-            <button onClick={onClose} className="w-full text-[12px] font-medium btn-primary text-white rounded-lg py-2.5">Done</button>
+            <button
+              onClick={onClose}
+              className="w-full text-[12px] font-medium btn-primary text-white rounded-lg py-2.5"
+            >
+              Done
+            </button>
           </div>
         )}
       </div>
@@ -234,8 +385,17 @@ export function ConfirmDeleteButton({ onConfirm, label = "Delete", message, titl
   // pass no message, so existing usage never breaks.
   if (message) {
     return (
-      <button type="button" onClick={() => confirmAction(message, onConfirm, { variant: "danger", title: title || "Confirm deletion", confirmLabel: label })}
-        className="w-full text-[12px] font-medium text-[#EF4444] border border-[#EF4444]/25 rounded-lg py-2.5 hover:bg-[#EF4444]/5 transition-colors flex items-center justify-center gap-1.5">
+      <button
+        type="button"
+        onClick={() =>
+          confirmAction(message, onConfirm, {
+            variant: "danger",
+            title: title || "Confirm deletion",
+            confirmLabel: label,
+          })
+        }
+        className="w-full text-[12px] font-medium text-[#EF4444] border border-[#EF4444]/25 rounded-lg py-2.5 hover:bg-[#EF4444]/5 transition-colors flex items-center justify-center gap-1.5"
+      >
         <Trash2 size={12} /> {label}
       </button>
     );
@@ -299,7 +459,10 @@ export function SkeletonRows({ cols, rows = 5 }) {
 export function EmptyState({ icon: Icon, title, hint, actionLabel, onAction }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-14 px-6">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3.5" style={{ backgroundColor: "#DCFCE7" }}>
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-3.5"
+        style={{ backgroundColor: "#DCFCE7" }}
+      >
         <Icon size={19} strokeWidth={1.75} className="text-[#16A34A]" />
       </div>
       <h3 className="text-[14.5px] font-semibold text-[#111827]">{title}</h3>
@@ -318,8 +481,18 @@ export function EmptyState({ icon: Icon, title, hint, actionLabel, onAction }) {
 
 export function MenuIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    >
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   );
 }
@@ -341,7 +514,7 @@ export function MenuIcon() {
 // mounts successfully.
 export function GlobalStyles() {
   return (
-      <style>{`
+    <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
         /* Smart Manager design tokens — adapted from the brand's design
@@ -587,8 +760,12 @@ export function AppLock({ children }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const storedHash = typeof window !== "undefined" ? window.localStorage.getItem("bs_app_lock_hash") : null;
-    if (storedHash) { setHasPin(true); setLocked(true); }
+    const storedHash =
+      typeof window !== "undefined" ? window.localStorage.getItem("bs_app_lock_hash") : null;
+    if (storedHash) {
+      setHasPin(true);
+      setLocked(true);
+    }
   }, []);
 
   // Real re-lock on backgrounding — the actual point of an app lock: if
@@ -622,22 +799,39 @@ export function AppLock({ children }) {
   // OS's actual fingerprint or Face ID dialog. Offered only when a
   // credential was genuinely enrolled on this device; PIN remains the
   // fallback, matching how phones themselves treat biometrics.
-  const bioCred = typeof window !== "undefined" ? window.localStorage.getItem("bs_bio_applock") : null;
+  const bioCred =
+    typeof window !== "undefined" ? window.localStorage.getItem("bs_bio_applock") : null;
   async function unlockBiometric() {
     try {
       const assertion = await navigator.credentials.get({
-        publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), allowCredentials: [{ type: "public-key", id: b64ToBuf(bioCred) }], userVerification: "required", timeout: 60000 },
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{ type: "public-key", id: b64ToBuf(bioCred) }],
+          userVerification: "required",
+          timeout: 60000,
+        },
       });
-      if (assertion) { setLocked(false); setPin(""); setError(false); }
-    } catch (_e) { setError(true); }
+      if (assertion) {
+        setLocked(false);
+        setPin("");
+        setError(false);
+      }
+    } catch (_e) {
+      setError(true);
+    }
   }
 
   if (!locked) return children;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#F8FAFC] flex items-center justify-center p-4" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div
+      className="fixed inset-0 z-[200] bg-[#F8FAFC] flex items-center justify-center p-4"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       <div className="w-full max-w-xs text-center">
-        <div className="mb-5 flex justify-center"><BrandMark size={56} textSize={22} /></div>
+        <div className="mb-5 flex justify-center">
+          <BrandMark size={56} textSize={22} />
+        </div>
         <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200/80 mx-auto flex items-center justify-center mb-4">
           <Lock size={22} className="text-[#16A34A]" />
         </div>
@@ -645,15 +839,32 @@ export function AppLock({ children }) {
         <p className="text-[12.5px] text-slate-500 mb-5">This device is locked for privacy.</p>
         <form onSubmit={unlock}>
           <input
-            type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => { setPin(e.target.value.replace(/\D/g, "")); setError(false); }}
-            autoFocus className="w-full text-center text-[22px] tracking-[0.5em] bg-white border border-slate-200 rounded-xl py-3 outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all"
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => {
+              setPin(e.target.value.replace(/\D/g, ""));
+              setError(false);
+            }}
+            autoFocus
+            className="w-full text-center text-[22px] tracking-[0.5em] bg-white border border-slate-200 rounded-xl py-3 outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all"
             placeholder="••••"
           />
           {error && <p className="text-[12px] text-[#EF4444] mt-2">Incorrect PIN — try again.</p>}
-          <button type="submit" disabled={pin.length < 4} className="w-full btn-primary text-white text-[14px] font-semibold rounded-xl py-3 mt-4 disabled:opacity-40">Unlock</button>
+          <button
+            type="submit"
+            disabled={pin.length < 4}
+            className="w-full btn-primary text-white text-[14px] font-semibold rounded-xl py-3 mt-4 disabled:opacity-40"
+          >
+            Unlock
+          </button>
         </form>
         {bioCred && (
-          <button onClick={unlockBiometric} className="w-full mt-3 flex items-center justify-center gap-2 text-[13px] font-medium text-[#16A34A] border border-[#16A34A]/40 rounded-xl py-3 hover:bg-[#16A34A]/5 transition-colors">
+          <button
+            onClick={unlockBiometric}
+            className="w-full mt-3 flex items-center justify-center gap-2 text-[13px] font-medium text-[#16A34A] border border-[#16A34A]/40 rounded-xl py-3 hover:bg-[#16A34A]/5 transition-colors"
+          >
             <Fingerprint size={15} /> Unlock with fingerprint / Face ID
           </button>
         )}

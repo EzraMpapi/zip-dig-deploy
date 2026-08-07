@@ -44,7 +44,15 @@ export function setWorkspaceId(id) {
   if (next === workspaceId) return false;
   workspaceId = next;
   if (dbPromise) {
-    dbPromise.then((db) => { try { db.close(); } catch (_e) { /* already closed */ } }).catch(() => {});
+    dbPromise
+      .then((db) => {
+        try {
+          db.close();
+        } catch (_e) {
+          /* already closed */
+        }
+      })
+      .catch(() => {});
   }
   dbPromise = null;
   return true;
@@ -81,12 +89,20 @@ export function openDB() {
       request.onupgradeneeded = () => upgrade(request.result);
       request.onsuccess = () => {
         const db = request.result;
-        db.onversionchange = () => { try { db.close(); } catch (_e) {} dbPromise = null; };
+        db.onversionchange = () => {
+          try {
+            db.close();
+          } catch (_e) {}
+          dbPromise = null;
+        };
         resolve(db);
       };
       request.onerror = () => reject(request.error || new Error("Failed to open local database"));
       request.onblocked = () => reject(new Error("Local database upgrade blocked by another tab"));
-    }).catch((error) => { dbPromise = null; throw error; });
+    }).catch((error) => {
+      dbPromise = null;
+      throw error;
+    });
   }
   return dbPromise;
 }
@@ -107,8 +123,15 @@ export async function withStore(storeName, mode, fn) {
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error || new Error("Local transaction aborted"));
     Promise.resolve(fn(tx.objectStore(storeName), promisify))
-      .then((value) => { result = value; })
-      .catch((error) => { try { tx.abort(); } catch (_e) {} reject(error); });
+      .then((value) => {
+        result = value;
+      })
+      .catch((error) => {
+        try {
+          tx.abort();
+        } catch (_e) {}
+        reject(error);
+      });
   });
 }
 
@@ -142,7 +165,12 @@ export function getAll(storeName) {
 /* Index-backed read with an optional predicate, page offset and limit. The
    cursor stops as soon as the page is full, so a 50-row page never
    materializes a 50 000-row table. */
-export function queryIndex(storeName, indexName, keyRange, { filter, offset = 0, limit = Infinity } = {}) {
+export function queryIndex(
+  storeName,
+  indexName,
+  keyRange,
+  { filter, offset = 0, limit = Infinity } = {},
+) {
   return withStore(storeName, "readonly", (store) => {
     const source = indexName ? store.index(indexName) : store;
     return new Promise((resolve, reject) => {
@@ -182,13 +210,17 @@ export async function getMeta(key, fallback) {
 export async function setMeta(key, value) {
   try {
     await put(STORE_META, { k: key, v: value });
-  } catch (_e) { /* meta is advisory: never fail a write because of it */ }
+  } catch (_e) {
+    /* meta is advisory: never fail a write because of it */
+  }
 }
 
 export async function deleteWorkspaceDatabase() {
   const name = dbName();
   if (dbPromise) {
-    try { (await dbPromise).close(); } catch (_e) {}
+    try {
+      (await dbPromise).close();
+    } catch (_e) {}
     dbPromise = null;
   }
   await new Promise((resolve) => {

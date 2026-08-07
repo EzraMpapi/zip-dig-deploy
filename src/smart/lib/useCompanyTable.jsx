@@ -10,12 +10,19 @@ export function useLocalPersist(key, defaultVal) {
     try {
       const stored = localStorage.getItem("bs_" + key);
       return stored !== null ? JSON.parse(stored) : defaultVal;
-    } catch (_e) { return defaultVal; }
+    } catch (_e) {
+      return defaultVal;
+    }
   });
-  const setPersist = useCallback((v) => {
-    setVal(v);
-    try { localStorage.setItem("bs_" + key, JSON.stringify(v)); } catch (_e) {}
-  }, [key]);
+  const setPersist = useCallback(
+    (v) => {
+      setVal(v);
+      try {
+        localStorage.setItem("bs_" + key, JSON.stringify(v));
+      } catch (_e) {}
+    },
+    [key],
+  );
   return [val, setPersist];
 }
 
@@ -31,22 +38,31 @@ export function useDebounce(value, delay = 300) {
 export function useSortableTable(rows = []) {
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
-  const [filterQ,  setFilterQ]  = useState("");
+  const [filterQ, setFilterQ] = useState("");
 
-  const doSort = useCallback((col) => {
-    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortCol(col); setSortDir("asc"); }
-  }, [sortCol]);
+  const doSort = useCallback(
+    (col) => {
+      if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      else {
+        setSortCol(col);
+        setSortDir("asc");
+      }
+    },
+    [sortCol],
+  );
 
   const sorted = useMemo(() => {
     let rows2 = [...rows];
     if (filterQ) {
       const q = filterQ.toLowerCase();
-      rows2 = rows2.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+      rows2 = rows2.filter((r) =>
+        Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
+      );
     }
     if (sortCol) {
       rows2.sort((a, b) => {
-        const va = a[sortCol] ?? "", vb = b[sortCol] ?? "";
+        const va = a[sortCol] ?? "",
+          vb = b[sortCol] ?? "";
         const n = typeof va === "number" ? va - vb : String(va).localeCompare(String(vb));
         return sortDir === "asc" ? n : -n;
       });
@@ -54,16 +70,22 @@ export function useSortableTable(rows = []) {
     return rows2;
   }, [rows, sortCol, sortDir, filterQ]);
 
-  const SortHeader = ({ col, label, className="" }) => (
-    <th className={"cursor-pointer select-none hover:bg-slate-100 transition-colors " + className}
-        onClick={() => doSort(col)}>
+  const SortHeader = ({ col, label, className = "" }) => (
+    <th
+      className={"cursor-pointer select-none hover:bg-slate-100 transition-colors " + className}
+      onClick={() => doSort(col)}
+    >
       <div className="flex items-center gap-1">
         <span>{label}</span>
-        {sortCol === col
-          ? sortDir === "asc"
-            ? <SortAsc size={11} className="text-[#16A34A] shrink-0"/>
-            : <SortDesc size={11} className="text-[#16A34A] shrink-0"/>
-          : <span className="w-[11px]"/>}
+        {sortCol === col ? (
+          sortDir === "asc" ? (
+            <SortAsc size={11} className="text-[#16A34A] shrink-0" />
+          ) : (
+            <SortDesc size={11} className="text-[#16A34A] shrink-0" />
+          )
+        ) : (
+          <span className="w-[11px]" />
+        )}
       </div>
     </th>
   );

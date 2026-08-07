@@ -13,15 +13,36 @@
                expects so the UI updates exactly as it does online.
    ══════════════════════════════════════════════════════════════════════════ */
 
-import { hasIndexedDB, deleteWorkspaceDatabase, setWorkspaceId, currentWorkspaceId } from "./idb.jsx";
+import {
+  hasIndexedDB,
+  deleteWorkspaceDatabase,
+  setWorkspaceId,
+  currentWorkspaceId,
+} from "./idb.jsx";
 import { resetKeyCache } from "./crypto.jsx";
 import { WORKSPACE_MODULES, moduleForTable, moduleLabel } from "./registry.jsx";
 import {
-  OP_DELETE, OP_INSERT, OP_UPDATE, enqueue, listQueue, purgeCompleted, queueStats,
+  OP_DELETE,
+  OP_INSERT,
+  OP_UPDATE,
+  enqueue,
+  listQueue,
+  purgeCompleted,
+  queueStats,
 } from "./outbox.jsx";
 import {
-  PENDING, SYNCED, cacheRemoteRows, countTable, exportRecords, findLocalMatches,
-  importRecords, newId, putLocalRow, readLocal, tombstone, workspaceSummary,
+  PENDING,
+  SYNCED,
+  cacheRemoteRows,
+  countTable,
+  exportRecords,
+  findLocalMatches,
+  importRecords,
+  newId,
+  putLocalRow,
+  readLocal,
+  tombstone,
+  workspaceSummary,
 } from "./store.jsx";
 import * as sync from "./sync.jsx";
 
@@ -36,7 +57,10 @@ export function offlineAvailable() {
 
 function disable(error) {
   available = false;
-  console.warn("[offline] local persistence unavailable — falling back to network-only:", error?.message || error);
+  console.warn(
+    "[offline] local persistence unavailable — falling back to network-only:",
+    error?.message || error,
+  );
 }
 
 async function guard(fn, fallback) {
@@ -45,7 +69,9 @@ async function guard(fn, fallback) {
     return await fn();
   } catch (error) {
     if (String(error?.name) === "QuotaExceededError") {
-      console.warn("[offline] local storage quota reached — older cache entries must be exported or cleared.");
+      console.warn(
+        "[offline] local storage quota reached — older cache entries must be exported or cleared.",
+      );
       return fallback;
     }
     disable(error);
@@ -120,8 +146,12 @@ export async function applyOfflineUpdate(table, filters, patch) {
       const merged = { ...match.data, ...stamped };
       await putLocalRow(table, merged, PENDING);
       await enqueue({
-        table, op: OP_UPDATE, recordId: match.id, filters,
-        payload: stamped, baseUpdatedAt: match.data?.updated_at || match.updatedAt,
+        table,
+        op: OP_UPDATE,
+        recordId: match.id,
+        filters,
+        payload: stamped,
+        baseUpdatedAt: match.data?.updated_at || match.updatedAt,
       });
       out.push(merged);
     }

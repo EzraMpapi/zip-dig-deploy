@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import {} from "lucide-react";
 import { lineTotal } from "../lib/format.jsx";
 
 /* ══════════════ BUSINESS INTELLIGENCE DATA ══════════════ */
@@ -10,13 +10,68 @@ import { lineTotal } from "../lib/format.jsx";
 // against it, rather than being stuck with whatever KPIs a developer
 // hardcoded onto a dashboard.
 export const KPI_METRICS = [
-  { id: "revenue", label: "Revenue Collected", unit: "TZS 000", compute: (d) => d.invoices.rows.reduce((s, inv) => { const { total } = lineTotal(inv.items); return s + (inv.status === "Paid" ? total : (inv.amountPaid || 0)); }, 0) },
-  { id: "profit", label: "Net Profit", unit: "TZS 000", compute: (d) => { const rev = d.invoices.rows.reduce((s, inv) => { const { total } = lineTotal(inv.items); return s + (inv.status === "Paid" ? total : (inv.amountPaid || 0)); }, 0); return rev - d.expenses.rows.reduce((s, e) => s + e.amount, 0); } },
-  { id: "receivables", label: "Outstanding Receivables", unit: "TZS 000", compute: (d) => d.invoices.rows.filter((inv) => inv.status !== "Paid").reduce((s, inv) => s + (lineTotal(inv.items).total - (inv.amountPaid || 0)), 0) },
-  { id: "stock_value", label: "Stock Value", unit: "TZS 000", compute: (d) => d.inventory.rows.reduce((s, it) => s + it.qty * it.unitCost, 0) },
-  { id: "pipeline_value", label: "Open Pipeline Value", unit: "TZS 000", compute: (d) => d.crm.rows.filter((l) => l.stage !== "Won" && l.stage !== "Lost").reduce((s, l) => s + l.value, 0) },
-  { id: "headcount", label: "Active Employees", unit: "people", compute: (d) => d.employees.rows.filter((e) => e.status === "Active").length },
-  { id: "win_rate", label: "Sales Win Rate", unit: "%", compute: (d) => { const won = d.crm.rows.filter((l) => l.stage === "Won").length; const closed = won + d.crm.rows.filter((l) => l.stage === "Lost").length; return closed > 0 ? Math.round((won / closed) * 100) : 0; } },
+  {
+    id: "revenue",
+    label: "Revenue Collected",
+    unit: "TZS 000",
+    compute: (d) =>
+      d.invoices.rows.reduce((s, inv) => {
+        const { total } = lineTotal(inv.items);
+        return s + (inv.status === "Paid" ? total : inv.amountPaid || 0);
+      }, 0),
+  },
+  {
+    id: "profit",
+    label: "Net Profit",
+    unit: "TZS 000",
+    compute: (d) => {
+      const rev = d.invoices.rows.reduce((s, inv) => {
+        const { total } = lineTotal(inv.items);
+        return s + (inv.status === "Paid" ? total : inv.amountPaid || 0);
+      }, 0);
+      return rev - d.expenses.rows.reduce((s, e) => s + e.amount, 0);
+    },
+  },
+  {
+    id: "receivables",
+    label: "Outstanding Receivables",
+    unit: "TZS 000",
+    compute: (d) =>
+      d.invoices.rows
+        .filter((inv) => inv.status !== "Paid")
+        .reduce((s, inv) => s + (lineTotal(inv.items).total - (inv.amountPaid || 0)), 0),
+  },
+  {
+    id: "stock_value",
+    label: "Stock Value",
+    unit: "TZS 000",
+    compute: (d) => d.inventory.rows.reduce((s, it) => s + it.qty * it.unitCost, 0),
+  },
+  {
+    id: "pipeline_value",
+    label: "Open Pipeline Value",
+    unit: "TZS 000",
+    compute: (d) =>
+      d.crm.rows
+        .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
+        .reduce((s, l) => s + l.value, 0),
+  },
+  {
+    id: "headcount",
+    label: "Active Employees",
+    unit: "people",
+    compute: (d) => d.employees.rows.filter((e) => e.status === "Active").length,
+  },
+  {
+    id: "win_rate",
+    label: "Sales Win Rate",
+    unit: "%",
+    compute: (d) => {
+      const won = d.crm.rows.filter((l) => l.stage === "Won").length;
+      const closed = won + d.crm.rows.filter((l) => l.stage === "Lost").length;
+      return closed > 0 ? Math.round((won / closed) * 100) : 0;
+    },
+  },
 ];
 
 export const customKpisSeed = [
@@ -30,8 +85,22 @@ export const customKpisSeed = [
 // Competitor tracking included) actually work: a rep or owner logs what
 // they've learned, not a live automated feed.
 export const competitorsSeed = [
-  { id: "COMP-01", name: "Coastal Building Supplies", category: "Construction Materials", threatLevel: "High", notes: "Undercuts on cement pricing by ~5%; weaker on delivery reliability.", lastUpdated: "2026-06-20" },
-  { id: "COMP-02", name: "Arusha Trade Center", category: "Hardware & Fixtures", threatLevel: "Medium", notes: "Strong regional presence in Arusha; limited product range vs. ours.", lastUpdated: "2026-06-10" },
+  {
+    id: "COMP-01",
+    name: "Coastal Building Supplies",
+    category: "Construction Materials",
+    threatLevel: "High",
+    notes: "Undercuts on cement pricing by ~5%; weaker on delivery reliability.",
+    lastUpdated: "2026-06-20",
+  },
+  {
+    id: "COMP-02",
+    name: "Arusha Trade Center",
+    category: "Hardware & Fixtures",
+    threatLevel: "Medium",
+    notes: "Strong regional presence in Arusha; limited product range vs. ours.",
+    lastUpdated: "2026-06-10",
+  },
 ];
 
 // Financial Benchmarking compares a real computed metric against a target
@@ -46,5 +115,10 @@ export const BENCHMARK_METRICS = [
 ];
 
 export const benchmarksSeed = [
-  { id: "BM-01", metricId: "gross_margin", label: "Industry Gross Margin (Hardware Retail)", benchmarkValue: 25 },
+  {
+    id: "BM-01",
+    metricId: "gross_margin",
+    label: "Industry Gross Margin (Hardware Retail)",
+    benchmarkValue: 25,
+  },
 ];

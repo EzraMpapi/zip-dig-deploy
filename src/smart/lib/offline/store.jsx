@@ -12,9 +12,7 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 import { decryptRows, encryptRow } from "./crypto.jsx";
-import {
-  STORE_RECORDS, countIndex, del, getAll, put, queryIndex, withStore,
-} from "./idb.jsx";
+import { STORE_RECORDS, countIndex, del, getAll, put, queryIndex, withStore } from "./idb.jsx";
 import { moduleForTable } from "./registry.jsx";
 
 export const SYNCED = "synced";
@@ -89,11 +87,18 @@ export async function tombstone(table, id) {
   const key = recordKey(table, id);
   await withStore(STORE_RECORDS, "readwrite", async (store, p) => {
     const existing = await p(store.get(key));
-    await p(store.put({
-      ...(existing || envelope(table, { id }, PENDING)),
-      key, table, module: moduleForTable(table), id: String(id),
-      deleted: true, syncState: PENDING, updatedAt: new Date().toISOString(),
-    }));
+    await p(
+      store.put({
+        ...(existing || envelope(table, { id }, PENDING)),
+        key,
+        table,
+        module: moduleForTable(table),
+        id: String(id),
+        deleted: true,
+        syncState: PENDING,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
   });
 }
 
@@ -116,17 +121,33 @@ function compare(a, b) {
 
 function matchOne(value, op, target) {
   switch (op) {
-    case "eq": return String(value) === target;
-    case "neq": return String(value) !== target;
-    case "gt": return compare(value, target) > 0;
-    case "gte": return compare(value, target) >= 0;
-    case "lt": return compare(value, target) < 0;
-    case "lte": return compare(value, target) <= 0;
+    case "eq":
+      return String(value) === target;
+    case "neq":
+      return String(value) !== target;
+    case "gt":
+      return compare(value, target) > 0;
+    case "gte":
+      return compare(value, target) >= 0;
+    case "lt":
+      return compare(value, target) < 0;
+    case "lte":
+      return compare(value, target) <= 0;
     case "like":
-    case "ilike": return String(value ?? "").toLowerCase().includes(target.replace(/[%*]/g, "").toLowerCase());
-    case "in": return target.replace(/^\(|\)$/g, "").split(",").map((v) => v.replace(/^"|"$/g, "")).includes(String(value));
-    case "is": return target === "null" ? value == null : String(value) === target;
-    default: return true;
+    case "ilike":
+      return String(value ?? "")
+        .toLowerCase()
+        .includes(target.replace(/[%*]/g, "").toLowerCase());
+    case "in":
+      return target
+        .replace(/^\(|\)$/g, "")
+        .split(",")
+        .map((v) => v.replace(/^"|"$/g, ""))
+        .includes(String(value));
+    case "is":
+      return target === "null" ? value == null : String(value) === target;
+    default:
+      return true;
   }
 }
 
@@ -134,7 +155,10 @@ export function matchesFilters(row, filters) {
   return filters.every(({ col, op, val }) => matchOne(row?.[col], op, val));
 }
 
-export async function readLocal(table, { filters = [], order = null, limit = Infinity, offset = 0 } = {}) {
+export async function readLocal(
+  table,
+  { filters = [], order = null, limit = Infinity, offset = 0 } = {},
+) {
   const range = IDBKeyRange.only(table);
   // Ordering and paging must be applied after filtering, so when the caller
   // sorts we read the filtered set and slice; unsorted reads page in-cursor.
@@ -146,7 +170,9 @@ export async function readLocal(table, { filters = [], order = null, limit = Inf
   let rows = await decryptRows(envelopes.map((rec) => rec.data));
   if (order) {
     const [col, dir] = String(order).split(".");
-    rows.sort((a, b) => (dir === "desc" ? -compare(a?.[col], b?.[col]) : compare(a?.[col], b?.[col])));
+    rows.sort((a, b) =>
+      dir === "desc" ? -compare(a?.[col], b?.[col]) : compare(a?.[col], b?.[col]),
+    );
     rows = rows.slice(offset, limit === Infinity ? undefined : offset + limit);
   }
   return rows;
@@ -175,7 +201,8 @@ export async function workspaceSummary() {
   const all = await getAll(STORE_RECORDS);
   const modules = new Map();
   for (const rec of all) {
-    if (!modules.has(rec.module)) modules.set(rec.module, { id: rec.module, rows: 0, pending: 0, tables: new Map() });
+    if (!modules.has(rec.module))
+      modules.set(rec.module, { id: rec.module, rows: 0, pending: 0, tables: new Map() });
     const mod = modules.get(rec.module);
     if (rec.deleted) mod.pending += 1;
     else {
@@ -184,10 +211,14 @@ export async function workspaceSummary() {
     }
     mod.tables.set(rec.table, (mod.tables.get(rec.table) || 0) + (rec.deleted ? 0 : 1));
   }
-  return [...modules.values()].map((mod) => ({
-    ...mod,
-    tables: [...mod.tables.entries()].map(([table, rows]) => ({ table, rows })).sort((a, b) => b.rows - a.rows),
-  })).sort((a, b) => b.rows - a.rows);
+  return [...modules.values()]
+    .map((mod) => ({
+      ...mod,
+      tables: [...mod.tables.entries()]
+        .map(([table, rows]) => ({ table, rows }))
+        .sort((a, b) => b.rows - a.rows),
+    }))
+    .sort((a, b) => b.rows - a.rows);
 }
 
 export async function exportRecords(moduleId) {

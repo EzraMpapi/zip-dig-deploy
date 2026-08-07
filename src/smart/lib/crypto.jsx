@@ -1,4 +1,4 @@
-import {  } from "lucide-react";
+import {} from "lucide-react";
 /* ══════════════ BIOMETRIC ATTENDANCE (WebAuthn) ══════════════ */
 export function bufToB64(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
@@ -19,5 +19,7 @@ export function b64ToBuf(b64) {
 export async function hashPin(pin) {
   const data = new TextEncoder().encode(pin);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }

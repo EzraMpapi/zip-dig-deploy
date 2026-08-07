@@ -1,7 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, Banknote, CheckCircle2, CircleDollarSign, CreditCard, Minus, Package, Percent, Plus, Printer, Receipt, Search, ShoppingBag, Smartphone, X } from "lucide-react";
 import {
-  Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis
+  ArrowUpDown,
+  Banknote,
+  CheckCircle2,
+  CircleDollarSign,
+  CreditCard,
+  Minus,
+  Package,
+  Percent,
+  Plus,
+  Printer,
+  Receipt,
+  Search,
+  ShoppingBag,
+  Smartphone,
+  X,
+} from "lucide-react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { EmptyState, FormField, SkeletonRows, inputClass } from "../components/ui.jsx";
 import { CATEGORY_GRADIENT, MARKUP } from "../data/ecommerce.jsx";
@@ -30,9 +53,35 @@ export const POS_TABS = [
 // timestamp is unambiguous rather than a guess.
 export function PosShiftPanel({ transactions, currentUser }) {
   const [now, setNow] = useState(new Date());
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t); }, []);
-  const shifts = useCompanyTable("pos_shifts", [], { order: { col: "opened_at", ascending: false }, mapRow: (r) => ({ id: r.id, dbId: r.id, cashier: r.cashier, openingFloat: Number(r.opening_float) || 0, countedCash: r.counted_cash === null || r.counted_cash === undefined ? null : Number(r.counted_cash), status: r.status, openedAt: r.opened_at, closedAt: r.closed_at }) });
-  const moves = useCompanyTable("pos_cash_movements", [], { order: { col: "created_at", ascending: false }, mapRow: (r) => ({ id: r.id, dbId: r.id, shiftId: r.shift_id, kind: r.kind, amount: Number(r.amount) || 0, reason: r.reason || "" }) });
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const shifts = useCompanyTable("pos_shifts", [], {
+    order: { col: "opened_at", ascending: false },
+    mapRow: (r) => ({
+      id: r.id,
+      dbId: r.id,
+      cashier: r.cashier,
+      openingFloat: Number(r.opening_float) || 0,
+      countedCash:
+        r.counted_cash === null || r.counted_cash === undefined ? null : Number(r.counted_cash),
+      status: r.status,
+      openedAt: r.opened_at,
+      closedAt: r.closed_at,
+    }),
+  });
+  const moves = useCompanyTable("pos_cash_movements", [], {
+    order: { col: "created_at", ascending: false },
+    mapRow: (r) => ({
+      id: r.id,
+      dbId: r.id,
+      shiftId: r.shift_id,
+      kind: r.kind,
+      amount: Number(r.amount) || 0,
+      reason: r.reason || "",
+    }),
+  });
   const [floatDraft, setFloatDraft] = useState("");
   const [countDraft, setCountDraft] = useState("");
   const [move, setMove] = useState({ kind: "Pay In", amount: "", reason: "" });
@@ -57,49 +106,123 @@ export function PosShiftPanel({ transactions, currentUser }) {
 
   async function openShift() {
     const f = Number(floatDraft);
-    if (isNaN(f) || f < 0) { notify("Enter the counted opening float.", "error"); return; }
-    if (open) { notify("A shift is already open — close it first. One drawer, one shift.", "error"); return; }
-    const row = { id: `SH-${Date.now()}`, cashier: currentUser?.name || "Cashier", openingFloat: f, countedCash: null, status: "Open", openedAt: new Date().toISOString(), closedAt: null };
+    if (isNaN(f) || f < 0) {
+      notify("Enter the counted opening float.", "error");
+      return;
+    }
+    if (open) {
+      notify("A shift is already open — close it first. One drawer, one shift.", "error");
+      return;
+    }
+    const row = {
+      id: `SH-${Date.now()}`,
+      cashier: currentUser?.name || "Cashier",
+      openingFloat: f,
+      countedCash: null,
+      status: "Open",
+      openedAt: new Date().toISOString(),
+      closedAt: null,
+    };
     shifts.setRows((prev) => [row, ...prev]);
     setFloatDraft("");
     notify(`Shift opened by ${row.cashier} — float TZS ${money(f)}k.`);
     if (IS_CONFIGURED) {
       try {
-        const header = await sb("pos_shifts").insert({ cashier: row.cashier, opening_float: f, status: "Open", opened_at: row.openedAt }).single().run();
-        if (header?.id) shifts.setRows((prev) => prev.map((s) => (s.id === row.id ? { ...s, dbId: header.id } : s)));
-      } catch (_e) { notify("Opened locally, but the server update failed.", "error"); }
+        const header = await sb("pos_shifts")
+          .insert({
+            cashier: row.cashier,
+            opening_float: f,
+            status: "Open",
+            opened_at: row.openedAt,
+          })
+          .single()
+          .run();
+        if (header?.id)
+          shifts.setRows((prev) =>
+            prev.map((s) => (s.id === row.id ? { ...s, dbId: header.id } : s)),
+          );
+      } catch (_e) {
+        notify("Opened locally, but the server update failed.", "error");
+      }
     }
   }
 
   async function addMove() {
     const amt = Number(move.amount);
-    if (!open || isNaN(amt) || amt <= 0) { notify("Enter an amount above zero.", "error"); return; }
-    const row = { id: `CM-${Date.now()}`, shiftId: open.dbId || open.id, kind: move.kind, amount: amt, reason: move.reason.trim() };
+    if (!open || isNaN(amt) || amt <= 0) {
+      notify("Enter an amount above zero.", "error");
+      return;
+    }
+    const row = {
+      id: `CM-${Date.now()}`,
+      shiftId: open.dbId || open.id,
+      kind: move.kind,
+      amount: amt,
+      reason: move.reason.trim(),
+    };
     moves.setRows((prev) => [row, ...prev]);
     setMove({ kind: move.kind, amount: "", reason: "" });
     notify(`${row.kind} of TZS ${money(amt)}k recorded — expected cash updated.`);
     if (IS_CONFIGURED && open.dbId) {
-      try { await sb("pos_cash_movements").insert({ shift_id: open.dbId, kind: row.kind, amount: amt, reason: row.reason || null }).run(); } catch (_e) { notify("Recorded locally, but the server update failed.", "error"); }
+      try {
+        await sb("pos_cash_movements")
+          .insert({ shift_id: open.dbId, kind: row.kind, amount: amt, reason: row.reason || null })
+          .run();
+      } catch (_e) {
+        notify("Recorded locally, but the server update failed.", "error");
+      }
     }
   }
 
   async function closeShift() {
-    if (!open || variance === null) { notify("Count the drawer first — a shift closed without a count proves nothing.", "error"); return; }
+    if (!open || variance === null) {
+      notify("Count the drawer first — a shift closed without a count proves nothing.", "error");
+      return;
+    }
     const closedAt = new Date().toISOString();
-    const verdict = variance === 0 ? "balanced exactly" : variance < 0 ? `SHORT by TZS ${money(Math.abs(variance))}k` : `OVER by TZS ${money(variance)}k`;
-    shifts.setRows((prev) => prev.map((s) => (s.id === open.id ? { ...s, status: "Closed", countedCash: counted, closedAt } : s)));
+    const verdict =
+      variance === 0
+        ? "balanced exactly"
+        : variance < 0
+          ? `SHORT by TZS ${money(Math.abs(variance))}k`
+          : `OVER by TZS ${money(variance)}k`;
+    shifts.setRows((prev) =>
+      prev.map((s) =>
+        s.id === open.id ? { ...s, status: "Closed", countedCash: counted, closedAt } : s,
+      ),
+    );
     notify(`Shift closed — drawer ${verdict}.`, variance === 0 ? "success" : "error");
-    logAudit("POS shift closed", "Point of Sale", `${open.cashier}: expected ${money(Math.round(expected))}k, counted ${money(counted)}k — ${verdict}`, currentUser?.name || "Cashier");
+    logAudit(
+      "POS shift closed",
+      "Point of Sale",
+      `${open.cashier}: expected ${money(Math.round(expected))}k, counted ${money(counted)}k — ${verdict}`,
+      currentUser?.name || "Cashier",
+    );
     setCountDraft("");
     if (IS_CONFIGURED && open.dbId) {
-      try { await sb("pos_shifts").eq("id", open.dbId).update({ status: "Closed", counted_cash: counted, closed_at: closedAt }).run(); } catch (_e) { notify("Closed locally, but the server update failed.", "error"); }
+      try {
+        await sb("pos_shifts")
+          .eq("id", open.dbId)
+          .update({ status: "Closed", counted_cash: counted, closed_at: closedAt })
+          .run();
+      } catch (_e) {
+        notify("Closed locally, but the server update failed.", "error");
+      }
     }
   }
 
   const Row = ({ label, value, strong }) => (
-    <div className={`flex items-center justify-between py-1.5 ${strong ? "border-t border-slate-200 mt-1 pt-2" : ""}`}>
-      <span className={`text-[12px] ${strong ? "font-semibold text-[#111827]" : "text-slate-500"}`}>{label}</span>
-      <span className={`text-[12.5px] font-mono ${strong ? "font-bold text-[#111827]" : "text-slate-600"}`}>{value}</span>
+    <div
+      className={`flex items-center justify-between py-1.5 ${strong ? "border-t border-slate-200 mt-1 pt-2" : ""}`}
+    >
+      <span className={`text-[12px] ${strong ? "font-semibold text-[#111827]" : "text-slate-500"}`}>
+        {label}
+      </span>
+      <span
+        className={`text-[12.5px] font-mono ${strong ? "font-bold text-[#111827]" : "text-slate-600"}`}
+      >
+        {value}
+      </span>
     </div>
   );
 
@@ -111,14 +234,35 @@ export function PosShiftPanel({ transactions, currentUser }) {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <p className="text-[13.5px] font-semibold text-[#111827]">No shift open</p>
-            <p className="text-[11px] text-slate-400">Count the drawer and open a shift before selling — sales rung with no shift open are recorded, but reconcile to nothing.</p>
+            <p className="text-[11px] text-slate-400">
+              Count the drawer and open a shift before selling — sales rung with no shift open are
+              recorded, but reconcile to nothing.
+            </p>
           </div>
           <div className="flex gap-2 items-center shrink-0">
-            <input type="number" min="0" className={inputClass + " w-36"} value={floatDraft} onChange={(e) => setFloatDraft(e.target.value)} placeholder="Opening float (TZS k)" />
-            <button onClick={openShift} className="btn-primary text-white text-[12px] font-medium rounded-lg px-3.5 py-2 shrink-0">Open Shift</button>
+            <input
+              type="number"
+              min="0"
+              className={inputClass + " w-36"}
+              value={floatDraft}
+              onChange={(e) => setFloatDraft(e.target.value)}
+              placeholder="Opening float (TZS k)"
+            />
+            <button
+              onClick={openShift}
+              className="btn-primary text-white text-[12px] font-medium rounded-lg px-3.5 py-2 shrink-0"
+            >
+              Open Shift
+            </button>
           </div>
         </div>
-        {last && <p className="text-[10.5px] text-slate-400 mt-2.5 pt-2.5 border-t border-slate-100">Last shift: {last.cashier} · closed {(last.closedAt || "").slice(0, 16).replace("T", " ")} · counted TZS {money(last.countedCash ?? 0)}k</p>}
+        {last && (
+          <p className="text-[10.5px] text-slate-400 mt-2.5 pt-2.5 border-t border-slate-100">
+            Last shift: {last.cashier} · closed{" "}
+            {(last.closedAt || "").slice(0, 16).replace("T", " ")} · counted TZS{" "}
+            {money(last.countedCash ?? 0)}k
+          </p>
+        )}
       </div>
     );
   }
@@ -130,16 +274,41 @@ export function PosShiftPanel({ transactions, currentUser }) {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
           <p className="text-[13.5px] font-semibold text-[#111827]">Shift open — {open.cashier}</p>
-          <span className="text-[11px] text-slate-400">{Math.floor(mins / 60)}h {mins % 60}m</span>
+          <span className="text-[11px] text-slate-400">
+            {Math.floor(mins / 60)}h {mins % 60}m
+          </span>
         </div>
-        <button onClick={closeShift} className="text-[12px] font-medium bg-[#F59E0B] text-white rounded-lg px-3.5 py-2 shrink-0">Close Shift &amp; Reconcile</button>
+        <button
+          onClick={closeShift}
+          className="text-[12px] font-medium bg-[#F59E0B] text-white rounded-lg px-3.5 py-2 shrink-0"
+        >
+          Close Shift &amp; Reconcile
+        </button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-        <div><p className="text-[10.5px] text-slate-400">Transactions</p><p className="text-[15px] font-mono font-bold text-[#111827]">{sales.count}</p></div>
-        <div><p className="text-[10.5px] text-slate-400">Total Sales</p><p className="text-[15px] font-mono font-bold text-[#111827]">{money(Math.round(sales.gross))}k</p></div>
-        <div><p className="text-[10.5px] text-slate-400">Cash Sales</p><p className="text-[15px] font-mono font-bold text-[#16A34A]">{money(Math.round(sales.cash))}k</p></div>
-        <div><p className="text-[10.5px] text-slate-400">Non-cash Sales</p><p className="text-[15px] font-mono font-bold text-slate-500">{money(Math.round(sales.other))}k</p></div>
+        <div>
+          <p className="text-[10.5px] text-slate-400">Transactions</p>
+          <p className="text-[15px] font-mono font-bold text-[#111827]">{sales.count}</p>
+        </div>
+        <div>
+          <p className="text-[10.5px] text-slate-400">Total Sales</p>
+          <p className="text-[15px] font-mono font-bold text-[#111827]">
+            {money(Math.round(sales.gross))}k
+          </p>
+        </div>
+        <div>
+          <p className="text-[10.5px] text-slate-400">Cash Sales</p>
+          <p className="text-[15px] font-mono font-bold text-[#16A34A]">
+            {money(Math.round(sales.cash))}k
+          </p>
+        </div>
+        <div>
+          <p className="text-[10.5px] text-slate-400">Non-cash Sales</p>
+          <p className="text-[15px] font-mono font-bold text-slate-500">
+            {money(Math.round(sales.other))}k
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-3 border-t border-slate-100">
@@ -151,35 +320,96 @@ export function PosShiftPanel({ transactions, currentUser }) {
           <Row label="− Pay outs" value={`${money(payOuts)}k`} />
           <Row label="Expected in drawer" value={`TZS ${money(Math.round(expected))}k`} strong />
           <div className="flex gap-2 items-center mt-2.5">
-            <input type="number" className={inputClass} value={countDraft} onChange={(e) => setCountDraft(e.target.value)} placeholder="Counted cash (TZS k)" />
+            <input
+              type="number"
+              className={inputClass}
+              value={countDraft}
+              onChange={(e) => setCountDraft(e.target.value)}
+              placeholder="Counted cash (TZS k)"
+            />
           </div>
           {variance !== null && (
-            <div className="mt-2 rounded-lg px-3 py-2" style={{ backgroundColor: variance === 0 ? "#DCFCE7" : variance < 0 ? "#FEE2E2" : "#FEF3C7" }}>
-              <p className="text-[12px] font-semibold" style={{ color: variance === 0 ? "#16A34A" : variance < 0 ? "#EF4444" : "#92400E" }}>
-                {variance === 0 ? "Balanced exactly." : variance < 0 ? `SHORT by TZS ${money(Math.abs(variance))}k` : `OVER by TZS ${money(variance)}k`}
+            <div
+              className="mt-2 rounded-lg px-3 py-2"
+              style={{
+                backgroundColor: variance === 0 ? "#DCFCE7" : variance < 0 ? "#FEE2E2" : "#FEF3C7",
+              }}
+            >
+              <p
+                className="text-[12px] font-semibold"
+                style={{ color: variance === 0 ? "#16A34A" : variance < 0 ? "#EF4444" : "#92400E" }}
+              >
+                {variance === 0
+                  ? "Balanced exactly."
+                  : variance < 0
+                    ? `SHORT by TZS ${money(Math.abs(variance))}k`
+                    : `OVER by TZS ${money(variance)}k`}
               </p>
-              {variance !== 0 && <p className="text-[10px] mt-0.5" style={{ color: variance < 0 ? "#991B1B" : "#92400E" }}>{variance < 0 ? "Money left the till without a sale — or a sale was miskeyed." : "Over is not good news: a customer was likely overcharged, or a sale never got rung."}</p>}
+              {variance !== 0 && (
+                <p
+                  className="text-[10px] mt-0.5"
+                  style={{ color: variance < 0 ? "#991B1B" : "#92400E" }}
+                >
+                  {variance < 0
+                    ? "Money left the till without a sale — or a sale was miskeyed."
+                    : "Over is not good news: a customer was likely overcharged, or a sale never got rung."}
+                </p>
+              )}
             </div>
           )}
         </div>
 
         <div>
           <p className="text-[12px] font-semibold text-[#111827] mb-1">Pay In / Pay Out</p>
-          <p className="text-[10.5px] text-slate-400 mb-2">Any money crossing the till that is not a sale — a float top-up, petty cash, or a refund paid out from an earlier shift. Without these, expected cash is a lie the moment anyone opens the drawer.</p>
+          <p className="text-[10.5px] text-slate-400 mb-2">
+            Any money crossing the till that is not a sale — a float top-up, petty cash, or a refund
+            paid out from an earlier shift. Without these, expected cash is a lie the moment anyone
+            opens the drawer.
+          </p>
           <div className="flex flex-wrap gap-2">
-            <select className={inputClass + " max-w-[110px]"} value={move.kind} onChange={(e) => setMove({ ...move, kind: e.target.value })}>
-              <option>Pay In</option><option>Pay Out</option>
+            <select
+              className={inputClass + " max-w-[110px]"}
+              value={move.kind}
+              onChange={(e) => setMove({ ...move, kind: e.target.value })}
+            >
+              <option>Pay In</option>
+              <option>Pay Out</option>
             </select>
-            <input type="number" min="0" className={inputClass + " max-w-[110px]"} value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} placeholder="TZS k" />
-            <input className={inputClass + " flex-1 min-w-[120px]"} value={move.reason} onChange={(e) => setMove({ ...move, reason: e.target.value })} placeholder="Reason" />
-            <button onClick={addMove} className="btn-primary text-white text-[12px] font-medium rounded-lg px-3 py-2 shrink-0">Record</button>
+            <input
+              type="number"
+              min="0"
+              className={inputClass + " max-w-[110px]"}
+              value={move.amount}
+              onChange={(e) => setMove({ ...move, amount: e.target.value })}
+              placeholder="TZS k"
+            />
+            <input
+              className={inputClass + " flex-1 min-w-[120px]"}
+              value={move.reason}
+              onChange={(e) => setMove({ ...move, reason: e.target.value })}
+              placeholder="Reason"
+            />
+            <button
+              onClick={addMove}
+              className="btn-primary text-white text-[12px] font-medium rounded-lg px-3 py-2 shrink-0"
+            >
+              Record
+            </button>
           </div>
           {mine.length > 0 && (
             <div className="mt-2.5 space-y-1">
               {mine.slice(0, 4).map((m) => (
                 <div key={m.id} className="flex justify-between text-[11.5px]">
-                  <span className="text-slate-500 truncate">{m.kind}{m.reason ? ` · ${m.reason}` : ""}</span>
-                  <span className={`font-mono shrink-0 ml-2 ${m.kind === "Pay In" ? "text-[#16A34A]" : "text-[#EF4444]"}`}>{m.kind === "Pay In" ? "+" : "−"}{money(m.amount)}k</span>
+                  <span className="text-slate-500 truncate">
+                    {m.kind}
+                    {m.reason ? ` · ${m.reason}` : ""}
+                  </span>
+                  <span
+                    className={`font-mono shrink-0 ml-2 ${m.kind === "Pay In" ? "text-[#16A34A]" : "text-[#EF4444]"}`}
+                  >
+                    {m.kind === "Pay In" ? "+" : "−"}
+                    {money(m.amount)}k
+                  </span>
                 </div>
               ))}
             </div>
@@ -197,24 +427,54 @@ export function POS({ inventory, transactionsHook, company, currentUser }) {
   const todayStr = TODAY.toISOString().slice(0, 10);
   const stats = useMemo(() => {
     const today = transactions.rows.filter((t) => t.date === todayStr);
-    const revenue = today.reduce((s, t) => s + t.items.reduce((si, it) => si + it.qty * it.price, 0) * (1 + TAX_RATE), 0);
+    const revenue = today.reduce(
+      (s, t) => s + t.items.reduce((si, it) => si + it.qty * it.price, 0) * (1 + TAX_RATE),
+      0,
+    );
     const itemsSold = today.reduce((s, t) => s + t.items.reduce((si, it) => si + it.qty, 0), 0);
-    return { count: today.length, revenue, itemsSold, avg: today.length ? revenue / today.length : 0 };
+    return {
+      count: today.length,
+      revenue,
+      itemsSold,
+      avg: today.length ? revenue / today.length : 0,
+    };
   }, [transactions.rows, todayStr]);
 
   const POS_KPIS = [
-    { label: "Today's Sales", value: `TZS ${money(Math.round(stats.revenue))}k`, delta: "Incl. VAT", up: true, icon: CircleDollarSign },
+    {
+      label: "Today's Sales",
+      value: `TZS ${money(Math.round(stats.revenue))}k`,
+      delta: "Incl. VAT",
+      up: true,
+      icon: CircleDollarSign,
+    },
     { label: "Transactions", value: String(stats.count), delta: "Today", up: true, icon: Receipt },
-    { label: "Items Sold", value: String(stats.itemsSold), delta: "Today", up: true, icon: ShoppingBag },
-    { label: "Avg Basket", value: `TZS ${money(Math.round(stats.avg))}k`, delta: "Per sale today", up: true, icon: Percent },
+    {
+      label: "Items Sold",
+      value: String(stats.itemsSold),
+      delta: "Today",
+      up: true,
+      icon: ShoppingBag,
+    },
+    {
+      label: "Avg Basket",
+      value: `TZS ${money(Math.round(stats.avg))}k`,
+      delta: "Per sale today",
+      up: true,
+      icon: Percent,
+    },
   ];
 
   return (
     <div className="space-y-5">
       <PosShiftPanel transactions={transactions} currentUser={currentUser} />
       <div>
-        <h1 className="text-[20px] sm:text-[22px] font-semibold text-[#111827] tracking-tight">Point of Sale</h1>
-        <p className="text-[13px] text-slate-500 mt-1">Counter checkout, priced and stocked from live Inventory</p>
+        <h1 className="text-[20px] sm:text-[22px] font-semibold text-[#111827] tracking-tight">
+          Point of Sale
+        </h1>
+        <p className="text-[13px] text-slate-500 mt-1">
+          Counter checkout, priced and stocked from live Inventory
+        </p>
       </div>
 
       <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto w-fit max-w-full">
@@ -226,7 +486,9 @@ export function POS({ inventory, transactionsHook, company, currentUser }) {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`text-[12px] font-medium px-3 py-1.5 rounded-md flex items-center gap-1.5 whitespace-nowrap transition-colors ${
-                isActive ? "bg-white text-[#111827] shadow-sm" : "text-slate-500 hover:text-slate-700"
+                isActive
+                  ? "bg-white text-[#111827] shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Icon size={13} /> {t.label}
@@ -236,11 +498,17 @@ export function POS({ inventory, transactionsHook, company, currentUser }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {POS_KPIS.map((k) => <KpiCard key={k.label} item={k} />)}
+        {POS_KPIS.map((k) => (
+          <KpiCard key={k.label} item={k} />
+        ))}
       </div>
 
-      {tab === "checkout" && <Checkout inventory={inventory} transactions={transactions} company={company} />}
-      {tab === "history" && <RegisterHistory transactions={transactions} inventory={inventory} company={company} />}
+      {tab === "checkout" && (
+        <Checkout inventory={inventory} transactions={transactions} company={company} />
+      )}
+      {tab === "history" && (
+        <RegisterHistory transactions={transactions} inventory={inventory} company={company} />
+      )}
     </div>
   );
 }
@@ -258,14 +526,17 @@ export function Checkout({ inventory, transactions, company }) {
   // regardless of which counter it's sold from.
   const products = useMemo(
     () => inventory.rows.map((it) => ({ ...it, price: Math.round(it.unitCost * MARKUP) })),
-    [inventory.rows]
+    [inventory.rows],
   );
   const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchesCat = category === "all" || p.category === category;
-      const matchesQ = !query.trim() || p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase());
+      const matchesQ =
+        !query.trim() ||
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.sku.toLowerCase().includes(query.toLowerCase());
       return matchesCat && matchesQ;
     });
   }, [products, category, query]);
@@ -285,14 +556,17 @@ export function Checkout({ inventory, transactions, company }) {
         notify(`${item.name} is out of stock`, "error");
         return prev;
       }
-      return [...prev, { sku: item.sku, name: item.name, price: item.price, qty: 1, unit: item.unit }];
+      return [
+        ...prev,
+        { sku: item.sku, name: item.name, price: item.price, qty: 1, unit: item.unit },
+      ];
     });
   }
 
   function changeQty(sku, delta) {
-    setCart((prev) => prev
-      .map((c) => (c.sku === sku ? { ...c, qty: c.qty + delta } : c))
-      .filter((c) => c.qty > 0));
+    setCart((prev) =>
+      prev.map((c) => (c.sku === sku ? { ...c, qty: c.qty + delta } : c)).filter((c) => c.qty > 0),
+    );
   }
 
   const subtotal = cart.reduce((s, c) => s + c.qty * c.price, 0);
@@ -315,32 +589,61 @@ export function Checkout({ inventory, transactions, company }) {
     }
 
     setBusy(true);
-    const draft = { id: docId("POS"), cashier: currentUser?.name || "You", method, date: TODAY.toISOString().slice(0, 10), createdAt: new Date().toISOString(), items: cart.map((c) => ({ sku: c.sku, name: c.name, qty: c.qty, price: c.price })), returns: [] };
+    const draft = {
+      id: docId("POS"),
+      cashier: currentUser?.name || "You",
+      method,
+      date: TODAY.toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+      items: cart.map((c) => ({ sku: c.sku, name: c.name, qty: c.qty, price: c.price })),
+      returns: [],
+    };
 
     // Deduct sold quantities from the shared Inventory table immediately —
     // the same table Inventory, Manufacturing, and Sales all read.
-    inventory.setRows((prev) => prev.map((it) => {
-      const line = cart.find((c) => c.sku === it.sku);
-      return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
-    }));
+    inventory.setRows((prev) =>
+      prev.map((it) => {
+        const line = cart.find((c) => c.sku === it.sku);
+        return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
+      }),
+    );
     transactions.setRows((prev) => [draft, ...prev]);
 
     if (IS_CONFIGURED) {
       try {
-        const header = await sb("pos_transactions").insert({
-          doc_number: draft.id, payment_method: method, subtotal, tax, total,
-        }).single().run();
+        const header = await sb("pos_transactions")
+          .insert({
+            doc_number: draft.id,
+            payment_method: method,
+            subtotal,
+            tax,
+            total,
+          })
+          .single()
+          .run();
         if (header?.id) {
-          await sb("pos_transaction_items").insert(
-            cart.map((c) => ({ transaction_id: header.id, item_name: c.name, item_sku: c.sku, qty: c.qty, price: c.price }))
-          ).run();
-          transactions.setRows((prev) => prev.map((t) => (t.id === draft.id ? { ...t, dbId: header.id } : t)));
+          await sb("pos_transaction_items")
+            .insert(
+              cart.map((c) => ({
+                transaction_id: header.id,
+                item_name: c.name,
+                item_sku: c.sku,
+                qty: c.qty,
+                price: c.price,
+              })),
+            )
+            .run();
+          transactions.setRows((prev) =>
+            prev.map((t) => (t.id === draft.id ? { ...t, dbId: header.id } : t)),
+          );
         }
         for (const c of cart) {
           const item = inventory.rows.find((it) => it.sku === c.sku);
           const newQty = Math.max(0, (item?.qty || 0) - c.qty);
           await sb("inventory_items").eq("sku", c.sku).update({ qty_on_hand: newQty }).run();
-          await sb("inventory_stock_movements").insert({ item_id: c.sku, movement: "Out", qty: c.qty, reference: `${draft.id} sale` }).run();
+          await sb("inventory_stock_movements")
+            .insert({ item_id: c.sku, movement: "Out", qty: c.qty, reference: `${draft.id} sale` })
+            .run();
         }
       } catch (e) {
         notify("Sale completed locally, but saving to the server failed.", "error");
@@ -396,26 +699,41 @@ export function Checkout({ inventory, transactions, company }) {
                 onClick={() => addToCart(p)}
                 disabled={outOfStock}
                 className={`text-left bg-white rounded-xl border border-slate-200/80 shadow-sm p-3.5 transition-all ${
-                  outOfStock ? "opacity-40 cursor-not-allowed" : "hover:border-[#16A34A]/50 hover:shadow-md hover:-translate-y-0.5"
+                  outOfStock
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:border-[#16A34A]/50 hover:shadow-md hover:-translate-y-0.5"
                 }`}
               >
                 <div
                   className="h-16 rounded-lg mb-2.5 flex items-center justify-center"
-                  style={{ background: CATEGORY_GRADIENT[p.category] || "linear-gradient(135deg, #111827, #16A34A)" }}
+                  style={{
+                    background:
+                      CATEGORY_GRADIENT[p.category] || "linear-gradient(135deg, #111827, #16A34A)",
+                  }}
                 >
                   <Package size={20} strokeWidth={1.5} className="text-white/85" />
                 </div>
-                <p className="text-[12.5px] font-medium text-[#111827] leading-snug line-clamp-2 min-h-[32px]">{p.name}</p>
+                <p className="text-[12.5px] font-medium text-[#111827] leading-snug line-clamp-2 min-h-[32px]">
+                  {p.name}
+                </p>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[13px] font-mono font-semibold text-[#111827]">{money(p.price)}k</span>
-                  <span className="text-[10.5px] text-slate-400 font-mono">{outOfStock ? "0 left" : `${p.qty} left`}</span>
+                  <span className="text-[13px] font-mono font-semibold text-[#111827]">
+                    {money(p.price)}k
+                  </span>
+                  <span className="text-[10.5px] text-slate-400 font-mono">
+                    {outOfStock ? "0 left" : `${p.qty} left`}
+                  </span>
                 </div>
               </button>
             );
           })}
           {filtered.length === 0 && (
             <div className="col-span-full bg-white rounded-xl border border-slate-200/80 shadow-sm">
-              <EmptyState icon={Search} title="No products found" hint="Try a different search term or category." />
+              <EmptyState
+                icon={Search}
+                title="No products found"
+                hint="Try a different search term or category."
+              />
             </div>
           )}
         </div>
@@ -428,7 +746,9 @@ export function Checkout({ inventory, transactions, company }) {
         </h3>
 
         {cart.length === 0 ? (
-          <p className="text-[12.5px] text-slate-400 py-8 text-center">Tap a product to add it to the sale.</p>
+          <p className="text-[12.5px] text-slate-400 py-8 text-center">
+            Tap a product to add it to the sale.
+          </p>
         ) : (
           <div className="space-y-2.5 mb-4 max-h-[320px] overflow-y-auto">
             {cart.map((c) => (
@@ -438,24 +758,43 @@ export function Checkout({ inventory, transactions, company }) {
                   <p className="text-[11px] text-slate-400 font-mono">{money(c.price)}k each</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => changeQty(c.sku, -1)} aria-label={`Decrease ${c.name} quantity`} className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50">
+                  <button
+                    onClick={() => changeQty(c.sku, -1)}
+                    aria-label={`Decrease ${c.name} quantity`}
+                    className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50"
+                  >
                     <Minus size={11} />
                   </button>
                   <span className="text-[12.5px] font-mono w-5 text-center">{c.qty}</span>
-                  <button onClick={() => changeQty(c.sku, 1)} aria-label={`Increase ${c.name} quantity`} className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50">
+                  <button
+                    onClick={() => changeQty(c.sku, 1)}
+                    aria-label={`Increase ${c.name} quantity`}
+                    className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50"
+                  >
                     <Plus size={11} />
                   </button>
                 </div>
-                <span className="text-[12.5px] font-mono text-[#111827] w-14 text-right shrink-0">{money(c.qty * c.price)}k</span>
+                <span className="text-[12.5px] font-mono text-[#111827] w-14 text-right shrink-0">
+                  {money(c.qty * c.price)}k
+                </span>
               </div>
             ))}
           </div>
         )}
 
         <div className="border-t border-slate-100 pt-3 space-y-1.5 text-[12.5px] mb-4">
-          <div className="flex justify-between text-slate-500"><span>Subtotal</span><span className="font-mono">TZS {money(subtotal)}k</span></div>
-          <div className="flex justify-between text-slate-500"><span>VAT ({Math.round(TAX_RATE * 100)}%)</span><span className="font-mono">TZS {money(tax)}k</span></div>
-          <div className="flex justify-between text-[#111827] font-semibold text-[14px] pt-1.5 border-t border-slate-100"><span>Total</span><span className="font-mono">TZS {money(total)}k</span></div>
+          <div className="flex justify-between text-slate-500">
+            <span>Subtotal</span>
+            <span className="font-mono">TZS {money(subtotal)}k</span>
+          </div>
+          <div className="flex justify-between text-slate-500">
+            <span>VAT ({Math.round(TAX_RATE * 100)}%)</span>
+            <span className="font-mono">TZS {money(tax)}k</span>
+          </div>
+          <div className="flex justify-between text-[#111827] font-semibold text-[14px] pt-1.5 border-t border-slate-100">
+            <span>Total</span>
+            <span className="font-mono">TZS {money(total)}k</span>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -468,7 +807,9 @@ export function Checkout({ inventory, transactions, company }) {
                   key={m}
                   onClick={() => setMethod(m)}
                   className={`flex flex-col items-center gap-1 text-[10.5px] font-medium rounded-lg py-2 border transition-colors ${
-                    method === m ? "border-[#16A34A] bg-[#16A34A]/8 text-[#111827]" : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                    method === m
+                      ? "border-[#16A34A] bg-[#16A34A]/8 text-[#111827]"
+                      : "border-slate-200 text-slate-500 hover:bg-slate-50"
                   }`}
                 >
                   <Icon size={15} /> {m}
@@ -487,7 +828,9 @@ export function Checkout({ inventory, transactions, company }) {
         </button>
       </div>
 
-      {receipt && <ReceiptPanel receipt={receipt} onClose={() => setReceipt(null)} company={company} />}
+      {receipt && (
+        <ReceiptPanel receipt={receipt} onClose={() => setReceipt(null)} company={company} />
+      )}
     </div>
   );
 }
@@ -496,7 +839,10 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
   const returns = receipt.returns || [];
   const refunded = returns.reduce((s, r) => s + r.refundTotal, 0);
   const fullyReturned = receipt.items.every((it) => {
-    const returnedQty = returns.reduce((s, r) => s + (r.items.find((ri) => ri.sku === it.sku)?.qty || 0), 0);
+    const returnedQty = returns.reduce(
+      (s, r) => s + (r.items.find((ri) => ri.sku === it.sku)?.qty || 0),
+      0,
+    );
     return returnedQty >= it.qty;
   });
 
@@ -512,8 +858,16 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
     const showLogo = company?.receiptShowLogo !== false;
     const footer = company?.receiptFooter || "Thank you for your business!";
     const win = window.open("", "_blank", "width=400,height=600");
-    if (!win) { notify("Pop-up blocked — allow pop-ups to print receipts.", "error"); return; }
-    const itemRows = receipt.items.map((it) => `<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${it.qty}× ${it.name}</span><span>${money(it.qty * it.price)}k</span></div>`).join("");
+    if (!win) {
+      notify("Pop-up blocked — allow pop-ups to print receipts.", "error");
+      return;
+    }
+    const itemRows = receipt.items
+      .map(
+        (it) =>
+          `<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${it.qty}× ${it.name}</span><span>${money(it.qty * it.price)}k</span></div>`,
+      )
+      .join("");
     win.document.write(`
       <html><head><title>Receipt ${receipt.id}</title>
       <style>
@@ -541,34 +895,54 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
   return (
     <div className="fixed inset-0 z-30 flex justify-end">
       <div className="absolute inset-0 bg-[#111827]/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative w-full sm:w-[380px] bg-white h-full shadow-2xl p-6 overflow-y-auto flex flex-col" style={{ animation: "slideIn .15s ease-out" }}>
+      <div
+        className="relative w-full sm:w-[380px] bg-white h-full shadow-2xl p-6 overflow-y-auto flex flex-col"
+        style={{ animation: "slideIn .15s ease-out" }}
+      >
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#16A34A14" }}>
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: "#16A34A14" }}
+            >
               <CheckCircle2 size={18} className="text-[#16A34A]" />
             </div>
             <div>
               <p className="text-[11px] text-slate-400 font-mono">{receipt.id}</p>
-              <h2 className="text-[16px] font-semibold text-[#111827]">{allowReturn ? "Receipt" : "Sale Complete"}</h2>
+              <h2 className="text-[16px] font-semibold text-[#111827]">
+                {allowReturn ? "Receipt" : "Sale Complete"}
+              </h2>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            aria-label="Close"
+          >
             <X size={18} />
           </button>
         </div>
 
         {fullyReturned && (
-          <span className="text-[11px] font-medium px-2 py-1 rounded-full inline-flex items-center gap-1.5 mb-4 w-fit" style={{ backgroundColor: "#EF444414", color: "#EF4444" }}>
+          <span
+            className="text-[11px] font-medium px-2 py-1 rounded-full inline-flex items-center gap-1.5 mb-4 w-fit"
+            style={{ backgroundColor: "#EF444414", color: "#EF4444" }}
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" /> Fully returned
           </span>
         )}
 
         <div className="border border-slate-100 rounded-lg overflow-hidden mb-5">
           {receipt.items.map((it, i) => (
-            <div key={i} className={`flex items-center justify-between px-3 py-2.5 text-[13px] ${i !== receipt.items.length - 1 ? "border-b border-slate-50" : ""}`}>
+            <div
+              key={i}
+              className={`flex items-center justify-between px-3 py-2.5 text-[13px] ${i !== receipt.items.length - 1 ? "border-b border-slate-50" : ""}`}
+            >
               <div>
                 <p className="text-slate-700">{it.name}</p>
-                <p className="text-[11px] text-slate-400 font-mono">{it.qty} × TZS {money(it.price)}k</p>
+                <p className="text-[11px] text-slate-400 font-mono">
+                  {it.qty} × TZS {money(it.price)}k
+                </p>
               </div>
               <span className="font-mono text-[#111827]">{money(it.qty * it.price)}k</span>
             </div>
@@ -576,11 +950,23 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
         </div>
 
         <div className="space-y-1.5 text-[13px] mb-6">
-          <div className="flex justify-between text-slate-500"><span>Subtotal</span><span className="font-mono">TZS {money(receipt.subtotal)}k</span></div>
-          <div className="flex justify-between text-slate-500"><span>VAT ({Math.round(TAX_RATE * 100)}%)</span><span className="font-mono">TZS {money(receipt.tax)}k</span></div>
-          <div className="flex justify-between text-[#111827] font-semibold text-[14px] pt-1.5 border-t border-slate-100"><span>Total Paid</span><span className="font-mono">TZS {money(receipt.total)}k</span></div>
+          <div className="flex justify-between text-slate-500">
+            <span>Subtotal</span>
+            <span className="font-mono">TZS {money(receipt.subtotal)}k</span>
+          </div>
+          <div className="flex justify-between text-slate-500">
+            <span>VAT ({Math.round(TAX_RATE * 100)}%)</span>
+            <span className="font-mono">TZS {money(receipt.tax)}k</span>
+          </div>
+          <div className="flex justify-between text-[#111827] font-semibold text-[14px] pt-1.5 border-t border-slate-100">
+            <span>Total Paid</span>
+            <span className="font-mono">TZS {money(receipt.total)}k</span>
+          </div>
           {refunded > 0 && (
-            <div className="flex justify-between text-[#EF4444] font-medium pt-1"><span>Refunded</span><span className="font-mono">−{money(refunded)}k</span></div>
+            <div className="flex justify-between text-[#EF4444] font-medium pt-1">
+              <span>Refunded</span>
+              <span className="font-mono">−{money(refunded)}k</span>
+            </div>
           )}
         </div>
 
@@ -593,12 +979,17 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
             <p className="text-[11px] text-slate-400 mb-2 uppercase tracking-wide">Returns</p>
             <div className="border border-slate-100 rounded-lg overflow-hidden">
               {returns.map((r) => (
-                <div key={r.id} className="px-3 py-2.5 text-[13px] border-b border-slate-50 last:border-0">
+                <div
+                  key={r.id}
+                  className="px-3 py-2.5 text-[13px] border-b border-slate-50 last:border-0"
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-slate-700">{r.reason}</p>
                     <span className="font-mono text-[#EF4444]">−{money(r.refundTotal)}k</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-mono">{r.date} · {r.items.map((it) => `${it.qty}× ${it.name}`).join(", ")}</p>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    {r.date} · {r.items.map((it) => `${it.qty}× ${it.name}`).join(", ")}
+                  </p>
                 </div>
               ))}
             </div>
@@ -608,7 +999,10 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
         <div className="flex-1" />
 
         <div className="flex flex-col gap-2">
-          <button onClick={printReceipt} className="flex items-center justify-center gap-1.5 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50 transition-colors">
+          <button
+            onClick={printReceipt}
+            className="flex items-center justify-center gap-1.5 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50 transition-colors"
+          >
             <Printer size={13} /> Print Receipt
           </button>
           {allowReturn && !fullyReturned && (
@@ -628,12 +1022,15 @@ export function ReceiptPanel({ receipt, onClose, allowReturn, onOpenReturn, comp
 export function ReturnFormPanel({ transaction, onClose, onSubmit }) {
   // How much of each line item has already been returned, across every
   // prior return on this transaction — you can't return more than remains.
-  const remaining = transaction.items.map((it) => {
-    const alreadyReturned = (transaction.returns || []).reduce(
-      (s, r) => s + (r.items.find((ri) => ri.sku === it.sku)?.qty || 0), 0
-    );
-    return { ...it, maxQty: it.qty - alreadyReturned };
-  }).filter((it) => it.maxQty > 0);
+  const remaining = transaction.items
+    .map((it) => {
+      const alreadyReturned = (transaction.returns || []).reduce(
+        (s, r) => s + (r.items.find((ri) => ri.sku === it.sku)?.qty || 0),
+        0,
+      );
+      return { ...it, maxQty: it.qty - alreadyReturned };
+    })
+    .filter((it) => it.maxQty > 0);
 
   const [qtys, setQtys] = useState(() => Object.fromEntries(remaining.map((it) => [it.sku, 0])));
   const [reason, setReason] = useState(RETURN_REASONS[0]);
@@ -642,7 +1039,9 @@ export function ReturnFormPanel({ transaction, onClose, onSubmit }) {
     setQtys((q) => ({ ...q, [sku]: Math.max(0, Math.min(max, val)) }));
   }
 
-  const returnItems = remaining.filter((it) => qtys[it.sku] > 0).map((it) => ({ sku: it.sku, name: it.name, qty: qtys[it.sku], price: it.price }));
+  const returnItems = remaining
+    .filter((it) => qtys[it.sku] > 0)
+    .map((it) => ({ sku: it.sku, name: it.name, qty: qtys[it.sku], price: it.price }));
   const refundSubtotal = returnItems.reduce((s, it) => s + it.qty * it.price, 0);
   const refundTotal = Math.round(refundSubtotal * (1 + TAX_RATE));
   const valid = returnItems.length > 0;
@@ -650,59 +1049,116 @@ export function ReturnFormPanel({ transaction, onClose, onSubmit }) {
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
       <div className="absolute inset-0 bg-[#111827]/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative w-full sm:w-[400px] bg-white h-full shadow-2xl overflow-y-auto flex flex-col" style={{ animation: "slideIn .15s ease-out" }}>
+      <div
+        className="relative w-full sm:w-[400px] bg-white h-full shadow-2xl overflow-y-auto flex flex-col"
+        style={{ animation: "slideIn .15s ease-out" }}
+      >
         <div className="px-6 pt-6 pb-5 border-b border-slate-100 flex items-start justify-between">
           <div>
             <p className="text-[11px] text-slate-400 uppercase tracking-wide">{transaction.id}</p>
             <h2 className="text-[18px] font-semibold text-[#111827] mt-0.5">Process Return</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close"><X size={18} /></button>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className="px-6 py-5 flex-1 space-y-4">
           <div>
-            <p className="text-[11px] font-medium text-slate-500 mb-2">Select items and quantities to return</p>
+            <p className="text-[11px] font-medium text-slate-500 mb-2">
+              Select items and quantities to return
+            </p>
             <div className="space-y-2.5">
               {remaining.map((it) => (
-                <div key={it.sku} className="flex items-center gap-2.5 border border-slate-100 rounded-lg p-2.5">
+                <div
+                  key={it.sku}
+                  className="flex items-center gap-2.5 border border-slate-100 rounded-lg p-2.5"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-medium text-[#111827] truncate">{it.name}</p>
-                    <p className="text-[11px] text-slate-400 font-mono">Up to {it.maxQty} returnable · {money(it.price)}k each</p>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      Up to {it.maxQty} returnable · {money(it.price)}k each
+                    </p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <button type="button" onClick={() => setQty(it.sku, qtys[it.sku] - 1, it.maxQty)} className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50" aria-label={`Decrease ${it.name} return quantity`}>
+                    <button
+                      type="button"
+                      onClick={() => setQty(it.sku, qtys[it.sku] - 1, it.maxQty)}
+                      className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50"
+                      aria-label={`Decrease ${it.name} return quantity`}
+                    >
                       <Minus size={11} />
                     </button>
                     <span className="text-[12.5px] font-mono w-5 text-center">{qtys[it.sku]}</span>
-                    <button type="button" onClick={() => setQty(it.sku, qtys[it.sku] + 1, it.maxQty)} className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50" aria-label={`Increase ${it.name} return quantity`}>
+                    <button
+                      type="button"
+                      onClick={() => setQty(it.sku, qtys[it.sku] + 1, it.maxQty)}
+                      className="w-6 h-6 rounded-md border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50"
+                      aria-label={`Increase ${it.name} return quantity`}
+                    >
                       <Plus size={11} />
                     </button>
                   </div>
                 </div>
               ))}
-              {remaining.length === 0 && <p className="text-[12.5px] text-slate-400">Every item on this receipt has already been returned.</p>}
+              {remaining.length === 0 && (
+                <p className="text-[12.5px] text-slate-400">
+                  Every item on this receipt has already been returned.
+                </p>
+              )}
             </div>
           </div>
 
           <FormField label="Reason">
-            <select className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)}>
-              {RETURN_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            <select
+              className={inputClass}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            >
+              {RETURN_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
             </select>
           </FormField>
 
           {valid && (
             <div className="bg-slate-50 rounded-lg p-3 space-y-1 text-[12.5px]">
-              <div className="flex justify-between text-slate-500"><span>Refund subtotal</span><span className="font-mono">TZS {money(refundSubtotal)}k</span></div>
-              <div className="flex justify-between text-slate-500"><span>VAT ({Math.round(TAX_RATE * 100)}%)</span><span className="font-mono">TZS {money(Math.round(refundSubtotal * TAX_RATE))}k</span></div>
-              <div className="flex justify-between text-[#EF4444] font-semibold pt-1 border-t border-slate-200 mt-1"><span>Total refund</span><span className="font-mono">TZS {money(refundTotal)}k</span></div>
+              <div className="flex justify-between text-slate-500">
+                <span>Refund subtotal</span>
+                <span className="font-mono">TZS {money(refundSubtotal)}k</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>VAT ({Math.round(TAX_RATE * 100)}%)</span>
+                <span className="font-mono">
+                  TZS {money(Math.round(refundSubtotal * TAX_RATE))}k
+                </span>
+              </div>
+              <div className="flex justify-between text-[#EF4444] font-semibold pt-1 border-t border-slate-200 mt-1">
+                <span>Total refund</span>
+                <span className="font-mono">TZS {money(refundTotal)}k</span>
+              </div>
             </div>
           )}
 
-          <p className="text-[11.5px] text-slate-400">Returned quantities are restocked to Inventory immediately.</p>
+          <p className="text-[11.5px] text-slate-400">
+            Returned quantities are restocked to Inventory immediately.
+          </p>
         </div>
 
         <div className="px-6 py-4 border-t border-slate-100 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50 transition-colors">Cancel</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
           <button
             type="button"
             disabled={!valid}
@@ -723,34 +1179,68 @@ export function RegisterHistory({ transactions, inventory, company }) {
   const { rows, setRows, loading } = transactions;
 
   async function processReturn(transaction, { items, reason, refundTotal }) {
-    const returnRecord = { id: `RET-${Date.now()}`, items, reason, refundTotal, date: TODAY.toISOString().slice(0, 10) };
+    const returnRecord = {
+      id: `RET-${Date.now()}`,
+      items,
+      reason,
+      refundTotal,
+      date: TODAY.toISOString().slice(0, 10),
+    };
 
     // Restock returned quantities to the shared Inventory immediately.
-    inventory.setRows((prev) => prev.map((it) => {
-      const line = items.find((ri) => ri.sku === it.sku);
-      return line ? { ...it, qty: it.qty + line.qty } : it;
-    }));
+    inventory.setRows((prev) =>
+      prev.map((it) => {
+        const line = items.find((ri) => ri.sku === it.sku);
+        return line ? { ...it, qty: it.qty + line.qty } : it;
+      }),
+    );
 
-    setRows((prev) => prev.map((t) => (t.id === transaction.id ? { ...t, returns: [returnRecord, ...(t.returns || [])] } : t)));
-    setSelected((s) => (s && s.id === transaction.id ? { ...s, returns: [returnRecord, ...(s.returns || [])] } : s));
+    setRows((prev) =>
+      prev.map((t) =>
+        t.id === transaction.id ? { ...t, returns: [returnRecord, ...(t.returns || [])] } : t,
+      ),
+    );
+    setSelected((s) =>
+      s && s.id === transaction.id ? { ...s, returns: [returnRecord, ...(s.returns || [])] } : s,
+    );
     setReturning(null);
     notify(`Return processed — TZS ${money(refundTotal)}k refunded, stock restocked`);
 
     if (IS_CONFIGURED && transaction.dbId) {
       try {
-        const header = await sb("pos_returns").insert({
-          transaction_id: transaction.dbId, reason, refund_total: refundTotal,
-        }).single().run();
+        const header = await sb("pos_returns")
+          .insert({
+            transaction_id: transaction.dbId,
+            reason,
+            refund_total: refundTotal,
+          })
+          .single()
+          .run();
         if (header?.id) {
-          await sb("pos_return_items").insert(
-            items.map((it) => ({ return_id: header.id, item_name: it.name, item_sku: it.sku, qty: it.qty, price: it.price }))
-          ).run();
+          await sb("pos_return_items")
+            .insert(
+              items.map((it) => ({
+                return_id: header.id,
+                item_name: it.name,
+                item_sku: it.sku,
+                qty: it.qty,
+                price: it.price,
+              })),
+            )
+            .run();
         }
         for (const it of items) {
           const item = inventory.rows.find((i) => i.sku === it.sku);
           const newQty = (item?.qty || 0) + it.qty;
           await sb("inventory_items").eq("sku", it.sku).update({ qty_on_hand: newQty }).run();
-          await sb("inventory_stock_movements").insert({ item_id: it.sku, movement: "In", qty: it.qty, reference: `${transaction.id} return` }).run();
+          await sb("inventory_stock_movements")
+            .insert({
+              item_id: it.sku,
+              movement: "In",
+              qty: it.qty,
+              reference: `${transaction.id} return`,
+            })
+            .run();
         }
       } catch (e) {
         notify("Return processed locally, but saving to the server failed.", "error");
@@ -760,20 +1250,30 @@ export function RegisterHistory({ transactions, inventory, company }) {
 
   // Daily sales for last 7 days
   const last7 = useMemo(() => {
-    return Array.from({length:7}, (_,i) => {
+    return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(TODAY);
-      d.setDate(d.getDate()-6+i);
-      const ds = d.toISOString().slice(0,10);
-      const dayTxns = rows.filter(t => t.date === ds);
-      const revenue = dayTxns.reduce((s,t) => s + t.items.reduce((si,it)=>si+it.qty*it.price,0)*(1+TAX_RATE), 0);
-      const txns    = dayTxns.length;
-      return { day:d.toLocaleDateString("en",{weekday:"short"}), revenue:Math.round(revenue), txns };
+      d.setDate(d.getDate() - 6 + i);
+      const ds = d.toISOString().slice(0, 10);
+      const dayTxns = rows.filter((t) => t.date === ds);
+      const revenue = dayTxns.reduce(
+        (s, t) => s + t.items.reduce((si, it) => si + it.qty * it.price, 0) * (1 + TAX_RATE),
+        0,
+      );
+      const txns = dayTxns.length;
+      return {
+        day: d.toLocaleDateString("en", { weekday: "short" }),
+        revenue: Math.round(revenue),
+        txns,
+      };
     });
   }, [rows]);
 
-  const totalRevenue = rows.reduce((s,t) => s + t.items.reduce((si,it)=>si+it.qty*it.price,0)*(1+TAX_RATE), 0);
-  const totalTxns    = rows.length;
-  const avgBasket    = totalTxns > 0 ? totalRevenue/totalTxns : 0;
+  const totalRevenue = rows.reduce(
+    (s, t) => s + t.items.reduce((si, it) => si + it.qty * it.price, 0) * (1 + TAX_RATE),
+    0,
+  );
+  const totalTxns = rows.length;
+  const avgBasket = totalTxns > 0 ? totalRevenue / totalTxns : 0;
 
   return (
     <div className="space-y-4">
@@ -785,24 +1285,66 @@ export function RegisterHistory({ transactions, inventory, company }) {
             <p className="text-[11.5px] text-slate-400">Revenue trend · TZS thousands</p>
           </div>
           <div className="flex gap-4 text-[12px]">
-            {[["Total Revenue","TZS "+money(Math.round(totalRevenue))+"k","#16A34A"],["Transactions",totalTxns,"#2563EB"],["Avg Basket","TZS "+money(Math.round(avgBasket))+"k","#7C3AED"]].map(([l,v,col])=>(
+            {[
+              ["Total Revenue", "TZS " + money(Math.round(totalRevenue)) + "k", "#16A34A"],
+              ["Transactions", totalTxns, "#2563EB"],
+              ["Avg Basket", "TZS " + money(Math.round(avgBasket)) + "k", "#7C3AED"],
+            ].map(([l, v, col]) => (
               <div key={l} className="text-center">
                 <p className="text-[10px] text-slate-400 uppercase tracking-wide">{l}</p>
-                <p className="text-[15px] font-bold" style={{color:col}}>{v}</p>
+                <p className="text-[15px] font-bold" style={{ color: col }}>
+                  {v}
+                </p>
               </div>
             ))}
           </div>
         </div>
         <ResponsiveContainer width="100%" height={140}>
-          <ComposedChart data={last7} margin={{left:-10,right:4,top:0,bottom:0}}>
-            <CartesianGrid vertical={false} stroke="#F3F4F6"/>
-            <XAxis dataKey="day" tick={{fontSize:11}} axisLine={false} tickLine={false}/>
-            <YAxis yAxisId="left"  tick={{fontSize:10}} axisLine={false} tickLine={false}/>
-            <YAxis yAxisId="right" orientation="right" tick={{fontSize:10}} axisLine={false} tickLine={false}/>
-            <Tooltip formatter={(v,n)=>[n==="revenue"?"TZS "+money(v)+"k":v+" txns",n==="revenue"?"Revenue":"Transactions"]}/>
-            <Bar  yAxisId="left"  dataKey="revenue" fill="#16A34A18" stroke="#16A34A" strokeWidth={1} radius={[4,4,0,0]} name="revenue"/>
-            <Line yAxisId="left"  dataKey="revenue" stroke="#16A34A" strokeWidth={2.5} dot={{r:3,fill:"#16A34A"}} type="monotone" name="revenue-line"/>
-            <Line yAxisId="right" dataKey="txns"    stroke="#7C3AED" strokeWidth={2}   dot={{r:3,fill:"#7C3AED"}} type="monotone" strokeDasharray="4 2" name="txns"/>
+          <ComposedChart data={last7} margin={{ left: -10, right: 4, top: 0, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="#F3F4F6" />
+            <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              formatter={(v, n) => [
+                n === "revenue" ? "TZS " + money(v) + "k" : v + " txns",
+                n === "revenue" ? "Revenue" : "Transactions",
+              ]}
+            />
+            <Bar
+              yAxisId="left"
+              dataKey="revenue"
+              fill="#16A34A18"
+              stroke="#16A34A"
+              strokeWidth={1}
+              radius={[4, 4, 0, 0]}
+              name="revenue"
+            />
+            <Line
+              yAxisId="left"
+              dataKey="revenue"
+              stroke="#16A34A"
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "#16A34A" }}
+              type="monotone"
+              name="revenue-line"
+            />
+            <Line
+              yAxisId="right"
+              dataKey="txns"
+              stroke="#7C3AED"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "#7C3AED" }}
+              type="monotone"
+              strokeDasharray="4 2"
+              name="txns"
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -820,35 +1362,58 @@ export function RegisterHistory({ transactions, inventory, company }) {
           </thead>
           <tbody>
             {loading && <SkeletonRows cols={6} />}
-            {!loading && rows.map((t) => {
-              const total = Math.round(t.items.reduce((s, it) => s + it.qty * it.price, 0) * (1 + TAX_RATE));
-              const hasReturns = (t.returns || []).length > 0;
-              return (
-                <tr key={t.id} onClick={() => setSelected(t)} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/70 cursor-pointer transition-colors">
-                  <td className="px-4 py-3 font-mono font-medium text-[#111827]">
-                    {t.id}
-                    {hasReturns && <span className="ml-1.5 text-[10px] font-sans font-medium text-[#EF4444]">· returned</span>}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">{t.cashier}</td>
-                  <td className="px-4 py-3 text-slate-500 font-mono">{t.date}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className="text-[11px] font-medium px-2 py-1 rounded-full inline-flex items-center gap-1.5"
-                      style={{ backgroundColor: `${POS_PAYMENT_COLOR[t.method]}14`, color: POS_PAYMENT_COLOR[t.method] }}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: POS_PAYMENT_COLOR[t.method] }} />
-                      {t.method}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-500">{t.items.reduce((s, it) => s + it.qty, 0)}</td>
-                  <td className="px-4 py-3 text-right font-mono">{money(total)}</td>
-                </tr>
-              );
-            })}
+            {!loading &&
+              rows.map((t) => {
+                const total = Math.round(
+                  t.items.reduce((s, it) => s + it.qty * it.price, 0) * (1 + TAX_RATE),
+                );
+                const hasReturns = (t.returns || []).length > 0;
+                return (
+                  <tr
+                    key={t.id}
+                    onClick={() => setSelected(t)}
+                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/70 cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3 font-mono font-medium text-[#111827]">
+                      {t.id}
+                      {hasReturns && (
+                        <span className="ml-1.5 text-[10px] font-sans font-medium text-[#EF4444]">
+                          · returned
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{t.cashier}</td>
+                    <td className="px-4 py-3 text-slate-500 font-mono">{t.date}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="text-[11px] font-medium px-2 py-1 rounded-full inline-flex items-center gap-1.5"
+                        style={{
+                          backgroundColor: `${POS_PAYMENT_COLOR[t.method]}14`,
+                          color: POS_PAYMENT_COLOR[t.method],
+                        }}
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: POS_PAYMENT_COLOR[t.method] }}
+                        />
+                        {t.method}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-slate-500">
+                      {t.items.reduce((s, it) => s + it.qty, 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono">{money(total)}</td>
+                  </tr>
+                );
+              })}
             {!loading && rows.length === 0 && (
               <tr>
                 <td colSpan={6}>
-                  <EmptyState icon={Receipt} title="No sales recorded yet" hint="Completed sales from the Checkout tab will appear here." />
+                  <EmptyState
+                    icon={Receipt}
+                    title="No sales recorded yet"
+                    hint="Completed sales from the Checkout tab will appear here."
+                  />
                 </td>
               </tr>
             )}
@@ -858,7 +1423,14 @@ export function RegisterHistory({ transactions, inventory, company }) {
 
       {selected && (
         <ReceiptPanel
-          receipt={{ ...selected, subtotal: Math.round(selected.items.reduce((s, it) => s + it.qty * it.price, 0)), tax: Math.round(selected.items.reduce((s, it) => s + it.qty * it.price, 0) * TAX_RATE), total: Math.round(selected.items.reduce((s, it) => s + it.qty * it.price, 0) * (1 + TAX_RATE)) }}
+          receipt={{
+            ...selected,
+            subtotal: Math.round(selected.items.reduce((s, it) => s + it.qty * it.price, 0)),
+            tax: Math.round(selected.items.reduce((s, it) => s + it.qty * it.price, 0) * TAX_RATE),
+            total: Math.round(
+              selected.items.reduce((s, it) => s + it.qty * it.price, 0) * (1 + TAX_RATE),
+            ),
+          }}
           onClose={() => setSelected(null)}
           allowReturn
           onOpenReturn={() => setReturning(selected)}

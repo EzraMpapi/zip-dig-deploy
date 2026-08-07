@@ -77,7 +77,9 @@ export async function queueStats() {
     pending: live.filter((entry) => entry.status !== FAILED).length,
     failed: live.filter((entry) => entry.status === FAILED).length,
     total: live.length,
-    oldest: live.length ? live.reduce((min, e) => (e.createdAt < min ? e.createdAt : min), live[0].createdAt) : null,
+    oldest: live.length
+      ? live.reduce((min, e) => (e.createdAt < min ? e.createdAt : min), live[0].createdAt)
+      : null,
   };
 }
 

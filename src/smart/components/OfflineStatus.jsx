@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Cloud, CloudOff, Database, Download, Loader2, RefreshCw, Trash2, Upload } from "lucide-react";
+import {
+  Cloud,
+  CloudOff,
+  Database,
+  Download,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import * as offline from "../lib/offline/index.jsx";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -17,9 +26,17 @@ export function useSyncStatus() {
 }
 
 const MODE_STYLE = {
-  online:  { label: "Online",  cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30", Icon: Cloud },
-  offline: { label: "Offline", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30",       Icon: CloudOff },
-  syncing: { label: "Syncing", cls: "bg-sky-500/10 text-sky-400 border-sky-500/30",             Icon: Loader2 },
+  online: {
+    label: "Online",
+    cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    Icon: Cloud,
+  },
+  offline: {
+    label: "Offline",
+    cls: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+    Icon: CloudOff,
+  },
+  syncing: { label: "Syncing", cls: "bg-sky-500/10 text-sky-400 border-sky-500/30", Icon: Loader2 },
 };
 
 function relative(iso) {
@@ -46,7 +63,9 @@ export function SyncStatusPill({ onOpen }) {
       <Icon size={12} className={status.mode === "syncing" ? "animate-spin" : ""} />
       <span>{meta.label}</span>
       {waiting > 0 && (
-        <span className="rounded-full bg-white/10 px-1.5 py-[1px] text-[10px] tabular-nums">{waiting}</span>
+        <span className="rounded-full bg-white/10 px-1.5 py-[1px] text-[10px] tabular-nums">
+          {waiting}
+        </span>
       )}
     </button>
   );
@@ -63,11 +82,18 @@ export function OfflineWorkspacePanel({ onClose }) {
     setQueue(await offline.queue());
   }
 
-  useEffect(() => { refresh(); }, [status.pending, status.failed, status.lastSyncAt]);
+  useEffect(() => {
+    refresh();
+  }, [status.pending, status.failed, status.lastSyncAt]);
 
   async function doSync() {
     setBusy(true);
-    try { await offline.syncEngine.syncNow(); } finally { setBusy(false); refresh(); }
+    try {
+      await offline.syncEngine.syncNow();
+    } finally {
+      setBusy(false);
+      refresh();
+    }
   }
 
   async function doExport(moduleId) {
@@ -99,7 +125,10 @@ export function OfflineWorkspacePanel({ onClose }) {
   const total = modules.reduce((sum, m) => sum + m.count, 0);
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-end bg-black/50 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[80] flex items-start justify-end bg-black/50 p-4"
+      onClick={onClose}
+    >
       <div
         className="mt-12 w-full max-w-md overflow-hidden rounded-xl border border-white/10 bg-[#12161d] text-slate-200 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -136,7 +165,10 @@ export function OfflineWorkspacePanel({ onClose }) {
             </p>
           )}
           {modules.map((m) => (
-            <div key={m.id} className="flex items-center gap-2 border-b border-white/5 py-2 text-[12px] last:border-0">
+            <div
+              key={m.id}
+              className="flex items-center gap-2 border-b border-white/5 py-2 text-[12px] last:border-0"
+            >
               <span className="flex-1 truncate">{m.label}</span>
               <span className="tabular-nums text-slate-400">{m.count}</span>
               {m.pending > 0 && (
@@ -163,7 +195,8 @@ export function OfflineWorkspacePanel({ onClose }) {
 
         {queue.some((q) => q.status === "failed") && (
           <div className="border-t border-white/10 px-4 py-2 text-[11px] text-rose-400">
-            {queue.filter((q) => q.status === "failed").length} operation(s) were rejected by the server and need review.
+            {queue.filter((q) => q.status === "failed").length} operation(s) were rejected by the
+            server and need review.
           </div>
         )}
 
@@ -181,7 +214,10 @@ export function OfflineWorkspacePanel({ onClose }) {
           </label>
           <button
             type="button"
-            onClick={async () => { await offline.clearCompletedQueue(); refresh(); }}
+            onClick={async () => {
+              await offline.clearCompletedQueue();
+              refresh();
+            }}
             className="ml-auto flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-slate-400 hover:bg-white/5"
           >
             <Trash2 size={11} /> Clear log
