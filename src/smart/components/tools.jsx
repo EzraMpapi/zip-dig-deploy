@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState, useCallback, useMemo, memo } from "react";
 import { Download, Package, PenTool } from "lucide-react";
 import { FormField, inputClass } from "../components/ui.jsx";
 import { signaturesSeed } from "../data/integrations.jsx";
@@ -6,19 +6,24 @@ import { mapSignatureRow, useCompanyTable } from "../lib/mappers.jsx";
 import { notify } from "../lib/notify.jsx";
 import { IS_CONFIGURED, sb } from "../lib/supabase.jsx";
 
-/* ══════════════ QR & BARCODE ══════════════ */
-/* -------------------------------- QR & BARCODE -------------------------------- */
+// ─── Safe check for window ──────────────────────────────────────────────
+const isBrowser = typeof window !== "undefined";
 
-// Real QR codes, genuinely scannable — rendered via a public QR image API
-// (api.qrserver.com), the same service already used elsewhere for this
-// pattern, since no client-side QR-encoding library is available in this
-// environment. This requires the browser to load an external image; a
-// fully offline generator would need a bundled encoding library instead.
-export function QRBarcodeTools({ onNavigate }) {
+/* ══════════════ QR & BARCODE ══════════════ */
+export const QRBarcodeTools = memo(function QRBarcodeTools({ onNavigate }) {
   const [text, setText] = useState("");
-  const qrUrl = text.trim()
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(text.trim())}`
-    : null;
+
+  const qrUrl = useMemo(() => {
+    const trimmed = text.trim();
+    return trimmed
+      ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(trimmed)}`
+      : null;
+  }, [text]);
+
+  const handleTextChange = useCallback((e) => setText(e.target.value), []);
+  const handleNavigate = useCallback(() => {
+    if (onNavigate) onNavigate("inventory");
+  }, [onNavigate]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -31,7 +36,7 @@ export function QRBarcodeTools({ onNavigate }) {
           <input
             className={inputClass}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             placeholder="e.g. INV-8801 or a payment link URL"
           />
         </FormField>
@@ -67,7 +72,7 @@ export function QRBarcodeTools({ onNavigate }) {
         </p>
         {onNavigate && (
           <button
-            onClick={() => onNavigate("inventory")}
+            onClick={handleNavigate}
             className="btn-secondary text-[12.5px] font-medium rounded-lg py-2 px-4 flex items-center gap-1.5"
           >
             <Package size={13} /> Open Inventory
@@ -76,69 +81,78 @@ export function QRBarcodeTools({ onNavigate }) {
       </div>
     </div>
   );
-}
+});
 
 /* ══════════════ E-SIGNATURE ══════════════ */
-/* -------------------------------- E-SIGNATURE -------------------------------- */
-
-// A real, working signature pad using the Canvas API — genuine capture,
-// not a mockup. What this honestly is not: a certified e-signature
-// platform like DocuSign or Adobe Sign, which additionally provide
-// identity verification, tamper-evident sealing, and a legal audit trail.
-// This is lightweight capture for informal internal sign-off, said
-// plainly rather than implied to be more than it is.
-export function ESignature() {
+export const ESignature = memo(function ESignature() {
   const signatures = useCompanyTable("signatures", signaturesSeed, {
     order: { col: "signed_at", ascending: false },
     mapRow: mapSignatureRow,
   });
   const { rows, setRows, loading } = signatures;
+
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
   const [documentRef, setDocumentRef] = useState("");
   const [signerName, setSignerName] = useState("");
   const [hasDrawn, setHasDrawn] = useState(false);
 
-  function getPos(e, canvas) {
+  // ─── Drawing helpers ──────────────────────────────────────────────────
+  const getPos = useCallback((e, canvas) => {
     const rect = canvas.getBoundingClientRect();
     const point = e.touches ? e.touches[0] : e;
     return { x: point.clientX - rect.left, y: point.clientY - rect.top };
-  }
+  }, []);
 
-  function startDraw(e) {
-    e.preventDefault();
-    drawingRef.current = true;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const { x, y } = getPos(e, canvas);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  }
-  function draw(e) {
-    if (!drawingRef.current) return;
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const { x, y } = getPos(e, canvas);
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#111827";
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    setHasDrawn(true);
-  }
-  function endDraw() {
+  const startDraw = useCallback(
+    (e) => {
+      e.preventDefault();
+      drawingRef.current = true;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const { x, y } = getPos(e, canvas);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    },
+    [getPos],
+  );
+
+  const draw = useCallback(
+    (e) => {
+      if (!drawingRef.current) return;
+      e.preventDefault();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const { x, y } = getPos(e, canvas);
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#111827";
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      setHasDrawn(true);
+    },
+    [getPos],
+  );
+
+  const endDraw = useCallback(() => {
     drawingRef.current = false;
-  }
-  function clearCanvas() {
+  }, []);
+
+  const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     setHasDrawn(false);
-  }
+  }, []);
 
-  async function saveSignature() {
+  // ─── Save signature ──────────────────────────────────────────────────
+  const saveSignature = useCallback(async () => {
     if (!hasDrawn || !documentRef.trim() || !signerName.trim()) return;
-    const imageData = canvasRef.current.toDataURL("image/png");
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const imageData = canvas.toDataURL("image/png");
     const draft = {
       id: `SIG-${Date.now()}`,
       documentRef: documentRef.trim(),
@@ -164,7 +178,10 @@ export function ESignature() {
         notify("Captured locally, but saving to the server failed.", "error");
       }
     }
-  }
+  }, [hasDrawn, documentRef, signerName, setRows, clearCanvas]);
+
+  // ─── Memoized signature list ────────────────────────────────────────
+  const signatureItems = useMemo(() => rows, [rows]);
 
   return (
     <div className="space-y-5">
@@ -228,13 +245,13 @@ export function ESignature() {
         </div>
       </div>
 
-      {rows.length > 0 && (
+      {signatureItems.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100">
             <h3 className="text-[14px] font-semibold text-[#111827]">Captured Signatures</h3>
           </div>
           <div className="divide-y divide-slate-50">
-            {rows.map((s) => (
+            {signatureItems.map((s) => (
               <div key={s.id} className="flex items-center gap-4 px-4 sm:px-5 py-3">
                 <img
                   src={s.imageData}
@@ -254,4 +271,9 @@ export function ESignature() {
       )}
     </div>
   );
-}
+});
+
+export default {
+  QRBarcodeTools,
+  ESignature,
+};
