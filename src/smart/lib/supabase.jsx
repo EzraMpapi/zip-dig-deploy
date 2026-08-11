@@ -3,30 +3,27 @@ import * as offline from "./offline/index.jsx";
    SUPABASE CLIENT — hand-rolled, fetch-based (no SDK)
 
    Credentials come from Vite env vars so real keys are never committed. Set
-   them in .env locally and in your deployment platform's environment
-   variables. This module exposes `configureSupabase()` so the app or a
-   server entrypoint can explicitly initialize the client at app startup.
+   them in .env locally and in Netlify/Vercel → Environment Variables for
+   deploys. The fallbacks keep the demo project working, so a fresh clone
+   still runs with `npm install && npm run dev`.
    ──────────────────────────────────────────────────────────────── */
 
 const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
 
+// Do NOT hardcode any real keys here. Use env vars or call configureSupabase
+// from a server or runtime initializer.
 let SUPABASE_URL = ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
-let SUPABASE_ANON_KEY =
-  ENV.VITE_SUPABASE_ANON_KEY ||
-  ""; // keep blank by default to avoid committing secrets
+let SUPABASE_ANON_KEY = ENV.VITE_SUPABASE_ANON_KEY || "";
 
 export function configureSupabase({ url, anonKey } = {}) {
-  // Only set values if provided; this can be called once at app startup
   if (url) SUPABASE_URL = url;
   if (anonKey) SUPABASE_ANON_KEY = anonKey;
-  // Recompute IS_CONFIGURED lazily through the exported getter
   ensureTransportConfigured();
 }
 
 export function getSupabaseUrl() {
   return SUPABASE_URL;
 }
-
 export function getSupabaseAnonKey() {
   return SUPABASE_ANON_KEY;
 }
@@ -45,23 +42,81 @@ export function setDemoOverride(v) {
 export function authHeaders() {
   const token =
     (typeof window !== "undefined" && window.localStorage?.getItem("bs_access_token")) ||
-    SUPABASE_ANON_KEY;
+    SUPABASE_ANON_KEY || "";
   return {
-    apikey: SUPABASE_ANON_KEY,
+    apikey: SUPABASE_ANON_KEY || "",
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
 }
 
-// ... authSignUp, authSignIn, authSignOut, authGetUser, authSignInWithOAuth,
-// callRpc unchanged (omitted here for brevity) — they will reference SUPABASE_URL and
-// SUPABASE_ANON_KEY via the functions above so the values can be injected at startup.
+const REQUEST_TIMEOUT_MS = 12_000;
 
-// (The rest of the file is unchanged apart from moving the offline transport
-// configuration into a guarded function so it only runs once.)
+function parseFilters(search) {
+  const filters = [];
+  for (const [col, raw] of search.entries()) {
+    if (col === "select" || col === "order" || col === "limit" || col === "offset") continue;
+    const idx = String(raw).indexOf(".");
+    if (idx === -1) {
+      filters.push({ col, op: "eq", val: String(raw) });
+      continue;
+    }
+    filters.push({ col, op: raw.slice(0, idx), val: raw.slice(idx + 1) });
+  }
+  return filters;
+}
 
-// --- network transport and offline integration ---
+function filtersToSearch(filters = []) {
+  const search = new URLSearchParams();
+  for (const { col, op, val } of filters) search.append(col, `${op}.${val}`);
+  return search;
+}
 
+function isBackendUnreachable(status) {
+  return (
+    status == null ||
+    status >= 500 ||
+    status === 401 ||
+    status === 403 ||
+    status === 408 ||
+    status === 429
+  );
+}
+
+async function rawRequest({ table, method = "GET", filters = [], body = null, select = null, order = null }) {
+  const search = filtersToSearch(filters);
+  if (select) search.set("select", select);
+  if (order) search.set("order", order);
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${search.toString()}`, {
+      method,
+      headers: { ...authHeaders(), Prefer: method === "GET" ? undefined : "return=representation" },
+      body: body == null ? null : JSON.stringify(body),
+      signal: controller ? controller.signal : undefined,
+    });
+    if (!res.ok) {
+      let err = {};
+      try {
+        err = await res.json();
+      } catch (_e) {
+        /* non-JSON error body */
+      }
+      const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+      error.status = res.status;
+      error.code = err.code;
+      throw error;
+    }
+    if (res.status === 204) return [];
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/* The sync engine reaches the network only through this transport. */
 let transportConfigured = false;
 function ensureTransportConfigured() {
   if (transportConfigured) return;
@@ -69,12 +124,173 @@ function ensureTransportConfigured() {
   transportConfigured = true;
 }
 
-// Keep the rawRequest implementation as before (same logic), omitted here for
-// brevity — the existing implementation will remain but now is wired only once.
-
-// For compatibility, call ensureTransportConfigured() at module load so the
-// current behavior is preserved when no explicit configureSupabase call is made.
+// Configure transport at module load so existing code that imports sb() works
+// without any explicit configureSupabase() call. This does not set any keys.
 ensureTransportConfigured();
 
-// Export existing functions (sb builder, auth helpers, etc.) below —
-// the rest of the file content is left unchanged to preserve behavior.
+// Minimal chainable query builder over PostgREST — mirrors previous implementation
+export function sb(table) {
+  let path = `${SUPABASE_URL}/rest/v1/${table}`;
+  const params = new URLSearchParams();
+  let method = "GET";
+  let body = null;
+  let single = false;
+  let payload = null;
+
+  function splitSelect(sel) {
+    const out = [];
+    let depth = 0,
+      cur = "";
+    for (const ch of sel) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        out.push(cur);
+        cur = "";
+        continue;
+      }
+      cur += ch;
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  const empty = () => (single ? undefined : []);
+  const shape = (rows) => (single ? rows[0] : rows);
+
+  async function localRead(search) {
+    const rows = await offline.readOffline(table, {
+      filters: parseFilters(search),
+      order: search.get("order"),
+      limit: single ? 1 : Infinity,
+    });
+    return shape(rows);
+  }
+
+  async function localWrite(search) {
+    const filters = parseFilters(search);
+    if (method === "POST") {
+      const saved = await offline.applyOfflineInsert(table, payload);
+      return single ? (Array.isArray(saved) ? saved[0] : saved) : Array.isArray(saved) ? saved : [saved];
+    }
+    if (method === "PATCH") return shape(await offline.applyOfflineUpdate(table, filters, payload || {}));
+    return shape(await offline.applyOfflineDelete(table, filters));
+  }
+
+  async function execute(selectOverride, attempt) {
+    const search = new URLSearchParams(params);
+    let sel = selectOverride || search.get("select") || "*";
+    if (method === "GET") {
+      // if offline, serve local mirror
+      if (offline.syncEngine.isOffline()) return localRead(search);
+    } else if (offline.syncEngine.isOffline()) {
+      return localWrite(search);
+    }
+    if (search.has("select") || selectOverride) search.set("select", sel);
+
+    let res;
+    try {
+      res = await fetch(`${path}?${search.toString()}`, {
+        method,
+        headers: {
+          ...authHeaders(),
+          Prefer: method === "GET" ? undefined : "return=representation",
+        },
+        body,
+      });
+    } catch (networkError) {
+      offline.syncEngine.reportBackendFailure(networkError);
+      return method === "GET" ? localRead(search) : localWrite(search);
+    }
+
+    if (res.ok) {
+      offline.syncEngine.reportBackendSuccess();
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : [];
+      const rows = Array.isArray(data) ? data : [data];
+      offline.cacheRows(table, rows);
+      return single ? rows[0] : rows;
+    }
+
+    let err = {};
+    try {
+      err = await res.json();
+    } catch (_e) {
+      /* non-JSON */
+    }
+
+    const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
+    if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
+      const flat = splitSelect(sel).filter((p) => !p.includes("(")).join(",") || "*";
+      console.warn(`[supabase] ${table}: unresolved embed dropped — using select "${flat}"`);
+      return execute(flat, attempt + 1);
+    }
+
+    if (method === "GET" && err.code === "42703" && search.has("order")) {
+      console.warn(`[supabase] ${table}: sort column missing — retrying unordered.`);
+      return execute(selectOverride, attempt + 1);
+    }
+
+    if (method === "GET" && (res.status === 404 || err.code === "42P01")) {
+      console.warn(`[supabase] ${table}: not present in this project — serving local workspace data.`);
+      return localRead(search);
+    }
+
+    if (isBackendUnreachable(res.status)) {
+      offline.syncEngine.reportBackendFailure(new Error(err.message || `HTTP ${res.status}`));
+      return method === "GET" ? localRead(search) : localWrite(search);
+    }
+
+    if (method === "GET") {
+      console.warn(`[supabase] ${table}: read failed (${res.status}) — ${err.message || "unknown error"}`);
+      const local = await localRead(search);
+      return Array.isArray(local) && local.length ? local : empty();
+    }
+
+    const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
+
+  const builder = {
+    select(cols = "*") {
+      params.set("select", cols);
+      return builder;
+    },
+    eq(col, val) {
+      params.append(col, `eq.${val}`);
+      return builder;
+    },
+    order(col, { ascending = true } = {}) {
+      params.set("order", `${col}.${ascending ? "asc" : "desc"}`);
+      return builder;
+    },
+    insert(row) {
+      method = "POST";
+      payload = row;
+      body = JSON.stringify(row);
+      return builder;
+    },
+    update(patch) {
+      method = "PATCH";
+      payload = patch;
+      body = JSON.stringify(patch);
+      return builder;
+    },
+    delete() {
+      method = "DELETE";
+      return builder;
+    },
+    single() {
+      single = true;
+      return builder;
+    },
+    async run() {
+      return execute(params.get("select"), 0);
+    },
+    then(resolve, reject) {
+      return builder.run().then(resolve, reject);
+    },
+  };
+  return builder;
+}
