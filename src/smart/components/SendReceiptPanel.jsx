@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Printer, X } from "lucide-react";
 import { TODAY, lineTotal } from "../lib/format.jsx";
 import { notify } from "../lib/notify.jsx";
@@ -18,7 +18,37 @@ export const BRIEFING_EXEC_ROLES = new Set([
   "Warehouse Manager",
 ]);
 
-export function DailyBriefing({
+// ─── Helper: safe localStorage ────────────────────────────────
+function safeLocalStorage() {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function getStorageItem(key) {
+  const storage = safeLocalStorage();
+  if (!storage) return null;
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageItem(key, value) {
+  const storage = safeLocalStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
+export const DailyBriefing = React.memo(function DailyBriefing({
   company,
   currentUser,
   canManage,
@@ -37,34 +67,37 @@ export function DailyBriefing({
   const TODAY_STR = TODAY.toISOString().slice(0, 10);
   const briKey = `bs_brief_${TODAY_STR}`;
 
-  // Auto-show once per day for exec roles
+  // ── State ──────────────────────────────────────────────────────
   const [open, setOpen] = useState(() => {
-    if (!BRIEFING_EXEC_ROLES.has(currentUser?.role)) return false;
+    const role = currentUser?.role || "";
+    if (!BRIEFING_EXEC_ROLES.has(role)) return false;
     try {
-      return !localStorage.getItem(briKey);
+      return !getStorageItem(briKey);
     } catch {
       return false;
     }
   });
   const [printing, setPrinting] = useState(false);
+  const printWindowRef = useRef(null);
 
+  // ── Auto-show once per day ────────────────────────────────────
   useEffect(() => {
     if (open) {
-      try {
-        localStorage.setItem(briKey, "1");
-      } catch {}
+      setStorageItem(briKey, "1");
     }
   }, [open]);
 
-  // Expose open trigger to topbar
+  // ── Expose open trigger to topbar ────────────────────────────
   useEffect(() => {
-    window.__openDailyBrief = () => setOpen(true);
+    if (typeof window === "undefined") return;
+    const trigger = () => setOpen(true);
+    window.__openDailyBrief = trigger;
     return () => {
       delete window.__openDailyBrief;
     };
   }, []);
 
-  // ── Compute all section data ─────────────────────────────────────────
+  // ── Compute all section data ──────────────────────────────────
   const data = useMemo(() => {
     const fmt = (n) => new Intl.NumberFormat("en-US").format(Math.round(n || 0));
     const today = TODAY_STR;
@@ -87,7 +120,7 @@ export function DailyBriefing({
     const outOfStock = invItems.filter((it) => it.stock <= 0);
     const stockValue = invItems.reduce((s, it) => s + (it.stock || 0) * (it.cost || 0), 0);
 
-    // FINANCE / EXPENSES
+    // FINANCE
     const expRows = expenses?.rows || [];
     const todayExp = expRows.filter((e) => e.date === today);
     const totalExp = expRows.reduce((s, e) => s + (e.amount || 0), 0);
@@ -138,7 +171,6 @@ export function DailyBriefing({
         return sum + s.amount / mo;
       }, 0);
 
-    // SMART ALERTS — deduplicated, ranked
     const alerts = (smartAlerts || []).slice(0, 20);
 
     return {
@@ -183,51 +215,19 @@ export function DailyBriefing({
     smartAlerts,
   ]);
 
-  if (!open) return null;
-
-  const {
-    fmt,
-    today,
-    todayInvs,
-    totalBilled,
-    totalCollected,
-    overdueInvs,
-    overdueAmt,
-    unpaidInvs,
-    lowStock,
-    outOfStock,
-    stockValue,
-    expRows,
-    todayExp,
-    totalExp,
-    grossPL,
-    leads,
-    newLeads,
-    openOpps,
-    pipeVal,
-    activeEmps,
-    onLeave,
-    expContracts,
-    wos,
-    overdueWO,
-    subs,
-    subsDue,
-    MRR,
-    alerts,
-  } = data;
-
-  const ALERT_CFG = {
-    critical: { col: "#EF4444", bg: "#FEF2F2", border: "#FECACA", label: "CRITICAL" },
-    high: { col: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", label: "HIGH" },
-    medium: { col: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE", label: "MEDIUM" },
-    low: { col: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "LOW" },
-  };
-
-  // ── PDF export ───────────────────────────────────────────────────────
-  function printBriefing() {
+  // ── Memoized handlers ──────────────────────────────────────────
+  const handleClose = useCallback(() => setOpen(false), []);
+  const handlePrint = useCallback(() => {
     const ACCENT = "#16A34A";
     const DARK = "#0D2214";
     const genTime = new Date().toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+    const { fmt, today, totalBilled, totalCollected, overdueInvs, overdueAmt, lowStock, outOfStock, stockValue, grossPL, activeEmps, onLeave, expContracts, overdueWO, openOpps, pipeVal, newLeads, MRR, subsDue, alerts } = data;
+    const ALERT_CFG = {
+      critical: { col: "#EF4444", bg: "#FEF2F2", border: "#FECACA", label: "CRITICAL" },
+      high: { col: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", label: "HIGH" },
+      medium: { col: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE", label: "MEDIUM" },
+      low: { col: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "LOW" },
+    };
 
     const alertRows = alerts
       .map((a) => {
@@ -271,11 +271,17 @@ export function DailyBriefing({
       })
       .join("");
 
+    if (printWindowRef.current) {
+      printWindowRef.current.close();
+    }
+
     const win = window.open("", "_blank", "width=1050,height=1200");
     if (!win) {
       notify("Pop-up blocked — allow pop-ups to download the briefing.", "error");
       return;
     }
+    printWindowRef.current = win;
+
     win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
       <title>Daily Briefing — ${co.name || "SMART MANAGER"} · ${today}</title>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
@@ -481,13 +487,53 @@ export function DailyBriefing({
     win.document.close();
     setTimeout(() => win.focus(), 200);
     notify("Daily Briefing PDF ready — print or save");
-  }
+  }, [data, co, currentUser, invoices]);
 
-  // ── Render: full-page modal overlay ─────────────────────────────────
+  if (!open) return null;
+
+  const {
+    fmt,
+    today,
+    todayInvs,
+    totalBilled,
+    totalCollected,
+    overdueInvs,
+    overdueAmt,
+    unpaidInvs,
+    lowStock,
+    outOfStock,
+    stockValue,
+    expRows,
+    todayExp,
+    totalExp,
+    grossPL,
+    leads,
+    newLeads,
+    openOpps,
+    pipeVal,
+    activeEmps,
+    onLeave,
+    expContracts,
+    wos,
+    overdueWO,
+    subs,
+    subsDue,
+    MRR,
+    alerts,
+  } = data;
+
+  const ALERT_CFG = {
+    critical: { col: "#EF4444", bg: "#FEF2F2", border: "#FECACA", label: "CRITICAL" },
+    high: { col: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", label: "HIGH" },
+    medium: { col: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE", label: "MEDIUM" },
+    low: { col: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "LOW" },
+  };
+
   const criticals = alerts.filter((a) => a.priority === "critical");
   const highs = alerts.filter((a) => a.priority === "high");
   const fmtCur = (n) => "TZS " + new Intl.NumberFormat("en-US").format(Math.round(n || 0)) + "k";
 
+  // ── Render ──────────────────────────────────────────────────────
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -498,10 +544,7 @@ export function DailyBriefing({
         style={{ animation: "briefingIn .35s cubic-bezier(.22,1,.36,1)" }}
       >
         {/* ── Header bar ── */}
-        <div
-          className="shrink-0 px-6 pt-5 pb-4 border-b border-slate-100"
-          style={{ background: "#0D2214" }}
-        >
+        <div className="shrink-0 px-6 pt-5 pb-4 border-b border-slate-100" style={{ background: "#0D2214" }}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -532,13 +575,13 @@ export function DailyBriefing({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={printBriefing}
+                onClick={handlePrint}
                 className="flex items-center gap-1.5 text-[12px] font-bold text-white px-3.5 py-2 rounded-xl border border-[rgba(255,255,255,.15)] hover:bg-[rgba(255,255,255,.08)]"
               >
                 <Printer size={13} /> PDF
               </button>
               <button
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-[rgba(255,255,255,.6)] hover:text-white hover:bg-[rgba(255,255,255,.1)]"
               >
                 <X size={16} />
@@ -578,65 +621,18 @@ export function DailyBriefing({
           {/* KPI tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-100">
             {[
-              {
-                l: "Total AR Billed",
-                v: fmtCur(data.totalBilled),
-                col: "#16A34A",
-                sub: (invoices?.rows || []).length + " invoices",
-              },
-              {
-                l: "Collected",
-                v: fmtCur(data.totalCollected),
-                col: "#2563EB",
-                sub:
-                  Math.round(
-                    data.totalBilled > 0 ? (data.totalCollected / data.totalBilled) * 100 : 0,
-                  ) + "% rate",
-              },
-              {
-                l: "Overdue AR",
-                v: fmtCur(data.overdueAmt),
-                col: data.overdueAmt > 0 ? "#EF4444" : "#16A34A",
-                sub: data.overdueInvs.length + " invoices",
-              },
-              {
-                l: "Gross P&L",
-                v: (data.grossPL >= 0 ? "+" : "") + fmtCur(Math.abs(data.grossPL)),
-                col: data.grossPL >= 0 ? "#16A34A" : "#EF4444",
-                sub: "Collected − Expenses",
-              },
-              {
-                l: "Inventory Value",
-                v: fmtCur(data.stockValue),
-                col: "#111827",
-                sub: (inventory?.rows || []).length + " SKUs",
-              },
-              {
-                l: "Low/Out of Stock",
-                v: String(data.lowStock.length),
-                col: data.lowStock.length > 0 ? "#EF4444" : "#16A34A",
-                sub: data.outOfStock.length + " completely out",
-              },
-              {
-                l: "Active Staff",
-                v: String(data.activeEmps.length),
-                col: "#111827",
-                sub: data.onLeave.length + " on leave today",
-              },
-              {
-                l: "Pipeline Value",
-                v: fmtCur(data.pipeVal),
-                col: "#7C3AED",
-                sub: data.openOpps.length + " open opps",
-              },
+              { l: "Total AR Billed", v: fmtCur(totalBilled), col: "#16A34A", sub: (invoices?.rows || []).length + " invoices" },
+              { l: "Collected", v: fmtCur(totalCollected), col: "#2563EB", sub: Math.round(totalBilled > 0 ? (totalCollected / totalBilled) * 100 : 0) + "% rate" },
+              { l: "Overdue AR", v: fmtCur(overdueAmt), col: overdueAmt > 0 ? "#EF4444" : "#16A34A", sub: overdueInvs.length + " invoices" },
+              { l: "Gross P&L", v: (grossPL >= 0 ? "+" : "") + fmtCur(Math.abs(grossPL)), col: grossPL >= 0 ? "#16A34A" : "#EF4444", sub: "Collected − Expenses" },
+              { l: "Inventory Value", v: fmtCur(stockValue), col: "#111827", sub: (inventory?.rows || []).length + " SKUs" },
+              { l: "Low/Out of Stock", v: String(lowStock.length), col: lowStock.length > 0 ? "#EF4444" : "#16A34A", sub: outOfStock.length + " completely out" },
+              { l: "Active Staff", v: String(activeEmps.length), col: "#111827", sub: onLeave.length + " on leave today" },
+              { l: "Pipeline Value", v: fmtCur(pipeVal), col: "#7C3AED", sub: openOpps.length + " open opps" },
             ].map(({ l, v, col, sub }) => (
               <div key={l} className="bg-white px-4 py-4">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">
-                  {l}
-                </p>
-                <p className="text-[19px] font-black" style={{ color: col }}>
-                  {v}
-                </p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">{l}</p>
+                <p className="text-[19px] font-black" style={{ color: col }}>{v}</p>
                 <p className="text-[10.5px] text-slate-400 mt-0.5">{sub}</p>
               </div>
             ))}
@@ -647,9 +643,7 @@ export function DailyBriefing({
             <div className="px-6 py-4 border-b border-slate-100">
               <h2 className="text-[14px] font-black text-[#111827] mb-3 flex items-center gap-2">
                 🚨 Active Alerts{" "}
-                <span className="text-[11px] font-bold text-white bg-[#EF4444] px-2 py-0.5 rounded-full">
-                  {alerts.length}
-                </span>
+                <span className="text-[11px] font-bold text-white bg-[#EF4444] px-2 py-0.5 rounded-full">{alerts.length}</span>
               </h2>
               <div className="space-y-2">
                 {alerts.map((a, i) => {
@@ -671,17 +665,11 @@ export function DailyBriefing({
                           >
                             {ac.label}
                           </span>
-                          <span className="text-[10.5px] font-semibold text-slate-500">
-                            {a.module || ""}
-                          </span>
+                          <span className="text-[10.5px] font-semibold text-slate-500">{a.module || ""}</span>
                         </div>
-                        <p className="text-[13px] font-bold" style={{ color: ac.col }}>
-                          {a.title || a.message || ""}
-                        </p>
+                        <p className="text-[13px] font-bold" style={{ color: ac.col }}>{a.title || a.message || ""}</p>
                         {(a.detail || a.description) && (
-                          <p className="text-[11.5px] text-slate-500 mt-0.5">
-                            {a.detail || a.description}
-                          </p>
+                          <p className="text-[11.5px] text-slate-500 mt-0.5">{a.detail || a.description}</p>
                         )}
                       </div>
                     </div>
@@ -696,24 +684,17 @@ export function DailyBriefing({
             <div className="px-6 py-4 border-b border-slate-100">
               <h2 className="text-[14px] font-black text-[#111827] mb-3 flex items-center gap-2">
                 📦 Low Stock Items{" "}
-                <span className="text-[11px] font-bold text-white bg-[#EF4444] px-2 py-0.5 rounded-full">
-                  {lowStock.length}
-                </span>
+                <span className="text-[11px] font-bold text-white bg-[#EF4444] px-2 py-0.5 rounded-full">{lowStock.length}</span>
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="bg-[#0D2214]">
-                      {["Item", "Category", "Stock", "Reorder Point", "Supplier", "Status"].map(
-                        (h) => (
-                          <th
-                            key={h}
-                            className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wide text-[rgba(255,255,255,.7)]"
-                          >
-                            {h}
-                          </th>
-                        ),
-                      )}
+                      {["Item", "Category", "Stock", "Reorder Point", "Supplier", "Status"].map((h) => (
+                        <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wide text-[rgba(255,255,255,.7)]">
+                          {h}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -721,18 +702,13 @@ export function DailyBriefing({
                       <tr key={it.id} className={i % 2 === 0 ? "bg-white" : "bg-[#FEF2F2]/50"}>
                         <td className="px-3 py-2.5 font-bold text-[#111827]">{it.name}</td>
                         <td className="px-3 py-2.5 text-slate-500">{it.category || "—"}</td>
-                        <td
-                          className="px-3 py-2.5 font-mono font-black"
-                          style={{ color: it.stock <= 0 ? "#EF4444" : "#F59E0B" }}
-                        >
+                        <td className="px-3 py-2.5 font-mono font-black" style={{ color: it.stock <= 0 ? "#EF4444" : "#F59E0B" }}>
                           {it.stock} {it.unit || ""}
                         </td>
                         <td className="px-3 py-2.5 font-mono text-slate-500">{it.reorderPoint}</td>
                         <td className="px-3 py-2.5 text-slate-500">{it.supplierName || "—"}</td>
                         <td className="px-3 py-2.5">
-                          <span
-                            className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${it.stock <= 0 ? "bg-[#EF4444] text-white" : "bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA]"}`}
-                          >
+                          <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${it.stock <= 0 ? "bg-[#EF4444] text-white" : "bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA]"}`}>
                             {it.stock <= 0 ? "🚨 OUT OF STOCK" : "⚠ REORDER NOW"}
                           </span>
                         </td>
@@ -749,22 +725,15 @@ export function DailyBriefing({
             <div className="px-6 py-4 border-b border-slate-100">
               <h2 className="text-[14px] font-black text-[#111827] mb-3 flex items-center gap-2">
                 📄 Overdue Invoices{" "}
-                <span className="text-[11px] font-bold text-white bg-[#F59E0B] px-2 py-0.5 rounded-full">
-                  {overdueInvs.length}
-                </span>
-                <span className="text-[13px] font-black text-[#EF4444] ml-auto">
-                  {fmtCur(data.overdueAmt)} outstanding
-                </span>
+                <span className="text-[11px] font-bold text-white bg-[#F59E0B] px-2 py-0.5 rounded-full">{overdueInvs.length}</span>
+                <span className="text-[13px] font-black text-[#EF4444] ml-auto">{fmtCur(overdueAmt)} outstanding</span>
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="bg-[#0D2214]">
                       {["Invoice", "Customer", "Due Date", "Days Late", "Balance"].map((h) => (
-                        <th
-                          key={h}
-                          className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wide text-[rgba(255,255,255,.7)]"
-                        >
+                        <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wide text-[rgba(255,255,255,.7)]">
                           {h}
                         </th>
                       ))}
@@ -773,28 +742,18 @@ export function DailyBriefing({
                   <tbody>
                     {overdueInvs.slice(0, 8).map((inv, i) => {
                       const bal = lineTotal(inv.items || []).total - (inv.amountPaid || 0);
-                      const days = Math.ceil(
-                        (new Date(TODAY_STR) - new Date(inv.dueDate)) / 86400000,
-                      );
+                      const days = Math.ceil((new Date(TODAY_STR) - new Date(inv.dueDate)) / 86400000);
                       return (
                         <tr key={inv.id} className={i % 2 === 0 ? "bg-white" : "bg-[#FEF2F2]/50"}>
-                          <td className="px-3 py-2.5 font-mono font-bold text-[#111827]">
-                            {inv.id}
-                          </td>
-                          <td className="px-3 py-2.5 font-semibold text-[#111827]">
-                            {inv.customer}
-                          </td>
+                          <td className="px-3 py-2.5 font-mono font-bold text-[#111827]">{inv.id}</td>
+                          <td className="px-3 py-2.5 font-semibold text-[#111827]">{inv.customer}</td>
                           <td className="px-3 py-2.5 font-mono text-slate-500">{inv.dueDate}</td>
                           <td className="px-3 py-2.5">
-                            <span
-                              className={`font-bold ${days > 30 ? "text-[#EF4444]" : days > 14 ? "text-[#F59E0B]" : "text-[#374151]"}`}
-                            >
+                            <span className={`font-bold ${days > 30 ? "text-[#EF4444]" : days > 14 ? "text-[#F59E0B]" : "text-[#374151]"}`}>
                               {days}d
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 font-mono font-black text-[#EF4444]">
-                            {fmtCur(bal)}
-                          </td>
+                          <td className="px-3 py-2.5 font-mono font-black text-[#EF4444]">{fmtCur(bal)}</td>
                         </tr>
                       );
                     })}
@@ -812,25 +771,12 @@ export function DailyBriefing({
                 {[
                   ["Active Employees", activeEmps.length, "#111827"],
                   ["On Leave Today", onLeave.length, onLeave.length > 0 ? "#F59E0B" : "#16A34A"],
-                  [
-                    "Expiring Contracts (30d)",
-                    expContracts.length,
-                    expContracts.length > 0 ? "#EF4444" : "#16A34A",
-                  ],
-                  [
-                    "Overdue Work Orders",
-                    data.overdueWO.length,
-                    data.overdueWO.length > 0 ? "#EF4444" : "#16A34A",
-                  ],
+                  ["Expiring Contracts (30d)", expContracts.length, expContracts.length > 0 ? "#EF4444" : "#16A34A"],
+                  ["Overdue Work Orders", overdueWO.length, overdueWO.length > 0 ? "#EF4444" : "#16A34A"],
                 ].map(([l, v, col]) => (
-                  <div
-                    key={l}
-                    className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0"
-                  >
+                  <div key={l} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
                     <span className="text-[12.5px] text-slate-600">{l}</span>
-                    <span className="text-[14px] font-black" style={{ color: col }}>
-                      {v}
-                    </span>
+                    <span className="text-[14px] font-black" style={{ color: col }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -845,14 +791,9 @@ export function DailyBriefing({
                   ["Monthly Recurring Rev", fmtCur(MRR), "#16A34A"],
                   ["Subs Due (7 days)", subsDue.length, subsDue.length > 0 ? "#F59E0B" : "#16A34A"],
                 ].map(([l, v, col]) => (
-                  <div
-                    key={l}
-                    className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0"
-                  >
+                  <div key={l} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
                     <span className="text-[12.5px] text-slate-600">{l}</span>
-                    <span className="text-[14px] font-black" style={{ color: col }}>
-                      {v}
-                    </span>
+                    <span className="text-[14px] font-black" style={{ color: col }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -863,27 +804,23 @@ export function DailyBriefing({
           {alerts.length === 0 && lowStock.length === 0 && overdueInvs.length === 0 && (
             <div className="mx-6 my-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-4 text-center">
               <p className="text-[15px] font-black text-[#16A34A]">✅ Business Health: All Clear</p>
-              <p className="text-[12.5px] text-[#166534] mt-1">
-                No critical alerts, no low stock, no overdue invoices. Business is running smoothly.
-              </p>
+              <p className="text-[12.5px] text-[#166534] mt-1">No critical alerts, no low stock, no overdue invoices. Business is running smoothly.</p>
             </div>
           )}
         </div>
 
         {/* ── Footer actions ── */}
         <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-slate-400">
-            Auto-shows once per day · Re-open anytime from the top bar
-          </p>
+          <p className="text-[11px] text-slate-400">Auto-shows once per day · Re-open anytime from the top bar</p>
           <div className="flex gap-2">
             <button
-              onClick={printBriefing}
+              onClick={handlePrint}
               className="flex items-center gap-1.5 text-[12.5px] font-bold text-white px-4 py-2 rounded-xl bg-[#16A34A]"
             >
               <Printer size={13} /> Download PDF
             </button>
             <button
-              onClick={() => setOpen(false)}
+              onClick={handleClose}
               className="text-[12.5px] font-medium text-slate-600 border border-slate-200 px-4 py-2 rounded-xl hover:bg-white"
             >
               Dismiss
@@ -895,9 +832,26 @@ export function DailyBriefing({
       <style>{`
         @keyframes briefingIn {
           from{opacity:0;transform:scale(.96) translateY(20px)}
-          to{opacity:1;transform:scale(1)    translateY(0)}
+          to{opacity:1;transform:scale(1) translateY(0)}
         }
       `}</style>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom memo comparison to prevent unnecessary re-renders
+  return (
+    prevProps.invoices?.rows === nextProps.invoices?.rows &&
+    prevProps.inventory?.rows === nextProps.inventory?.rows &&
+    prevProps.expenses?.rows === nextProps.expenses?.rows &&
+    prevProps.crm?.rows === nextProps.crm?.rows &&
+    prevProps.employees === nextProps.employees &&
+    prevProps.leaveRequests?.rows === nextProps.leaveRequests?.rows &&
+    prevProps.workOrders?.rows === nextProps.workOrders?.rows &&
+    prevProps.subscriptions?.rows === nextProps.subscriptions?.rows &&
+    prevProps.smartAlerts === nextProps.smartAlerts &&
+    prevProps.currentUser?.role === nextProps.currentUser?.role &&
+    prevProps.company?.id === nextProps.company?.id
+  );
+});
+
+export default DailyBriefing;
