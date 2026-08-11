@@ -1,10 +1,20 @@
 import markAsset from "@/assets/smart-manager-mark.png.asset.json";
 
-// The brand mark, extracted once so Login, Signup, the portals and the sidebar
-// all render the identical logo rather than separately-drifting copies.
-// `textSize` is kept in the signature for call-site compatibility; the mark is
-// now the official SMART MANAGER hexagon icon, so no letterform is drawn.
-export function BrandMark({ size = 80, textSize: _textSize, className = "", spin = false }) {
+/**
+ * BrandMark – the official SMART MANAGER hexagon logo.
+ *
+ * @param {Object} props
+ * @param {number} [props.size=80] – Width and height in pixels.
+ * @param {string} [props.className=""] – Additional CSS classes.
+ * @param {boolean} [props.spin=false] – Whether the logo spins continuously.
+ * @param {string} [props.alt="SMART MANAGER logo"] – Alt text for accessibility.
+ */
+export function BrandMark({
+  size = 80,
+  className = "",
+  spin = false,
+  alt = "SMART MANAGER logo",
+}) {
   return (
     <div
       className={`flex items-center justify-center shrink-0 ${className}`}
@@ -12,7 +22,7 @@ export function BrandMark({ size = 80, textSize: _textSize, className = "", spin
     >
       <img
         src={markAsset.url}
-        alt="SMART MANAGER logo"
+        alt={alt}
         width={size}
         height={size}
         draggable={false}
@@ -21,7 +31,7 @@ export function BrandMark({ size = 80, textSize: _textSize, className = "", spin
           height: "100%",
           objectFit: "contain",
           filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.18))",
-          animation: spin ? "es-logo-spin 8s linear infinite" : undefined,
+          animation: spin ? "spin 8s linear infinite" : undefined,
         }}
       />
     </div>
