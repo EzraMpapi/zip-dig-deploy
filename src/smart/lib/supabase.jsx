@@ -325,4 +325,4 @@ export function sb(table) {
     },
   };
   return builder;
-        }
+}
