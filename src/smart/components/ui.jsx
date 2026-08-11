@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef, memo } from "react";
 import {
   CheckCircle2,
   Fingerprint,
-  Icon,
   LoaderCircle,
   Lock,
   Package,
@@ -19,7 +18,38 @@ import { COMPANY_CATEGORIES } from "../data/core.jsx";
 import { confirmAction } from "../lib/buses.jsx";
 import { b64ToBuf, hashPin } from "../lib/crypto.jsx";
 
-export function FormField({ label, required, children }) {
+// ─── Safe localStorage helpers ────────────────────────────────────────────
+function safeLocalStorage() {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function getStorageItem(key) {
+  const storage = safeLocalStorage();
+  if (!storage) return null;
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageItem(key, value) {
+  const storage = safeLocalStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
+// ─── FormField ──────────────────────────────────────────────────────────
+export const FormField = memo(function FormField({ label, required, children }) {
   return (
     <div>
       <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
@@ -29,18 +59,20 @@ export function FormField({ label, required, children }) {
       {children}
     </div>
   );
-}
+});
 
-// A searchable list, not an icon grid — corrected after reviewing real
-// SokoBook screenshots (section 58) showing exactly this pattern: a
-// search field over a plain scrollable list of specific categories, no
-// icons. The earlier icon-grid version of this component was built on a
-// general mobile-UX assumption before this build had any real reference
-// to check it against; with real evidence in hand, matching it precisely
-// is more honest than keeping a plausible-sounding guess.
-export function CategoryPicker({ value, onChange }) {
+// ─── CategoryPicker ──────────────────────────────────────────────────
+export const CategoryPicker = memo(function CategoryPicker({ value, onChange }) {
   const [query, setQuery] = useState("");
-  const filtered = COMPANY_CATEGORIES.filter((c) => c.toLowerCase().includes(query.toLowerCase()));
+
+  const filtered = useMemo(() => {
+    return COMPANY_CATEGORIES.filter((c) =>
+      c.toLowerCase().includes(query.toLowerCase()),
+    );
+  }, [query]);
+
+  const handleQueryChange = useCallback((e) => setQuery(e.target.value), []);
+  const handleSelect = useCallback((cat) => onChange(cat), [onChange]);
 
   return (
     <div>
@@ -48,7 +80,7 @@ export function CategoryPicker({ value, onChange }) {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleQueryChange}
           placeholder="Search category"
           className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-[13px] outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all"
         />
@@ -60,7 +92,7 @@ export function CategoryPicker({ value, onChange }) {
             <button
               key={cat}
               type="button"
-              onClick={() => onChange(cat)}
+              onClick={() => handleSelect(cat)}
               className="w-full flex items-center justify-between px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50"
               style={active ? { backgroundColor: "#DCFCE7" } : undefined}
             >
@@ -83,21 +115,12 @@ export function CategoryPicker({ value, onChange }) {
       </div>
     </div>
   );
-}
+});
 
 export const inputClass =
   "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] text-[#111827] placeholder-slate-400 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 focus:shadow-sm transition-all";
 
-// Real Excel/CSV import for Customers and Products — genuinely built to
-// close a specific, verified competitive gap: SokoBook's own advertised
-// feature list includes "Import existing customer and product data from
-// Excel to get started quickly," and without this, a business using
-// SokoBook has no realistic way to switch — retyping every customer and
-// every product by hand is exactly the kind of friction that keeps
-// someone on a competitor's product regardless of what else this one
-// offers. Uses SheetJS (already available in this environment) to
-// genuinely parse a real uploaded file — not a form that pretends to
-// accept a spreadsheet and silently does nothing with it.
+// ─── IMPORT_FIELD_MAP ──────────────────────────────────────────────────
 export const IMPORT_FIELD_MAP = {
   customers: {
     tableLabel: "Customers",
@@ -148,7 +171,8 @@ export function normalizeHeader(h) {
     .replace(/[^a-z0-9]/g, "");
 }
 
-export function DataImportPanel({ type, onClose, onImport }) {
+// ─── DataImportPanel ──────────────────────────────────────────────────
+export const DataImportPanel = memo(function DataImportPanel({ type, onClose, onImport }) {
   const config = IMPORT_FIELD_MAP[type];
   const [rows, setRows] = useState(null);
   const [fileName, setFileName] = useState("");
@@ -156,60 +180,61 @@ export function DataImportPanel({ type, onClose, onImport }) {
   const [busy, setBusy] = useState(false);
   const [imported, setImported] = useState(0);
 
-  function handleFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const workbook = XLSX.read(evt.target.result, { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        if (raw.length === 0) {
-          setError("This file has no rows to import.");
-          return;
+  const handleFile = useCallback(
+    (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setError(null);
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const raw = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          if (raw.length === 0) {
+            setError("This file has no rows to import.");
+            return;
+          }
+
+          const sourceHeaders = Object.keys(raw[0]);
+          const headerMap = {};
+          config.fields.forEach((f) => {
+            const match = sourceHeaders.find(
+              (h) =>
+                f.aliases.includes(normalizeHeader(h)) ||
+                normalizeHeader(h) === normalizeHeader(f.label),
+            );
+            if (match) headerMap[f.key] = match;
+          });
+
+          const mapped = raw
+            .map((r) => {
+              const out = {};
+              config.fields.forEach((f) => {
+                out[f.key] = headerMap[f.key] ? r[headerMap[f.key]] : "";
+              });
+              return out;
+            })
+            .filter((r) => Object.values(r).some((v) => String(v).trim() !== ""));
+
+          setRows({
+            data: mapped,
+            matchedFields: Object.keys(headerMap).length,
+            totalFields: config.fields.length,
+          });
+        } catch (_e) {
+          setError("Couldn't read this file — make sure it's a real .xlsx, .xls, or .csv export.");
         }
+      };
+      reader.onerror = () => setError("Couldn't read this file.");
+      reader.readAsArrayBuffer(file);
+    },
+    [config],
+  );
 
-        // Real auto-detection: match each target field against whatever
-        // headers the file actually has, ignoring case/spacing/punctuation
-        // differences rather than requiring an exact column name match.
-        const sourceHeaders = Object.keys(raw[0]);
-        const headerMap = {};
-        config.fields.forEach((f) => {
-          const match = sourceHeaders.find(
-            (h) =>
-              f.aliases.includes(normalizeHeader(h)) ||
-              normalizeHeader(h) === normalizeHeader(f.label),
-          );
-          if (match) headerMap[f.key] = match;
-        });
-
-        const mapped = raw
-          .map((r) => {
-            const out = {};
-            config.fields.forEach((f) => {
-              out[f.key] = headerMap[f.key] ? r[headerMap[f.key]] : "";
-            });
-            return out;
-          })
-          .filter((r) => Object.values(r).some((v) => String(v).trim() !== ""));
-
-        setRows({
-          data: mapped,
-          matchedFields: Object.keys(headerMap).length,
-          totalFields: config.fields.length,
-        });
-      } catch (_e) {
-        setError("Couldn't read this file — make sure it's a real .xlsx, .xls, or .csv export.");
-      }
-    };
-    reader.onerror = () => setError("Couldn't read this file.");
-    reader.readAsBinaryString(file);
-  }
-
-  async function confirmImport() {
+  const confirmImport = useCallback(async () => {
     if (!rows?.data?.length) return;
     setBusy(true);
     try {
@@ -220,7 +245,11 @@ export function DataImportPanel({ type, onClose, onImport }) {
     } finally {
       setBusy(false);
     }
-  }
+  }, [rows, onImport]);
+
+  const resetSelection = useCallback(() => setRows(null), []);
+
+  const Icon = config.icon;
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -259,8 +288,7 @@ export function DataImportPanel({ type, onClose, onImport }) {
                 {imported} {config.tableLabel.toLowerCase()} imported
               </p>
               <p className="text-[12.5px] text-slate-500">
-                They're already real records — check {type === "customers" ? "CRM" : "Inventory"}{" "}
-                now.
+                They're already real records — check {type === "customers" ? "CRM" : "Inventory"} now.
               </p>
             </div>
           ) : !rows ? (
@@ -328,7 +356,7 @@ export function DataImportPanel({ type, onClose, onImport }) {
               </div>
               {error && <p className="text-[11.5px] text-[#EF4444]">{error}</p>}
               <button
-                onClick={() => setRows(null)}
+                onClick={resetSelection}
                 className="text-[11.5px] text-slate-400 hover:text-slate-600"
               >
                 Choose a different file
@@ -373,27 +401,40 @@ export function DataImportPanel({ type, onClose, onImport }) {
       </div>
     </div>
   );
-}
+});
 
-// Two-step delete: first click arms confirmation, second click within the
-// window commits. Used by every detail panel so destructive actions never
-// fire from a single accidental click.
-export function ConfirmDeleteButton({ onConfirm, label = "Delete", message, title }) {
-  // Upgraded to use the global confirmAction bus — every ConfirmDeleteButton
-  // now shows the premium dialog instead of the in-place two-button pattern.
-  // The original armed-state pattern is kept as fallback for call sites that
-  // pass no message, so existing usage never breaks.
+// ─── ConfirmDeleteButton ──────────────────────────────────────────────
+export const ConfirmDeleteButton = memo(function ConfirmDeleteButton({
+  onConfirm,
+  label = "Delete",
+  message,
+  title,
+}) {
+  const [armed, setArmed] = useState(false);
+
+  const handleConfirm = useCallback(() => {
+    if (message) {
+      confirmAction(message, onConfirm, {
+        variant: "danger",
+        title: title || "Confirm deletion",
+        confirmLabel: label,
+      });
+    } else {
+      setArmed(true);
+    }
+  }, [message, onConfirm, title, label]);
+
+  const handleCancel = useCallback(() => setArmed(false), []);
+  const handleDelete = useCallback(() => {
+    onConfirm();
+    setArmed(false);
+  }, [onConfirm]);
+
   if (message) {
     return (
       <button
         type="button"
-        onClick={() =>
-          confirmAction(message, onConfirm, {
-            variant: "danger",
-            title: title || "Confirm deletion",
-            confirmLabel: label,
-          })
-        }
+        onClick={handleConfirm}
         className="w-full text-[12px] font-medium text-[#EF4444] border border-[#EF4444]/25 rounded-lg py-2.5 hover:bg-[#EF4444]/5 transition-colors flex items-center justify-center gap-1.5"
       >
         <Trash2 size={12} /> {label}
@@ -401,20 +442,19 @@ export function ConfirmDeleteButton({ onConfirm, label = "Delete", message, titl
     );
   }
 
-  const [armed, setArmed] = useState(false);
   if (armed) {
     return (
       <div className="flex gap-2 flex-1">
         <button
           type="button"
-          onClick={() => setArmed(false)}
+          onClick={handleCancel}
           className="flex-1 text-[12px] font-medium border border-slate-200 rounded-lg py-2.5 hover:bg-slate-50 transition-colors"
         >
           Cancel
         </button>
         <button
           type="button"
-          onClick={onConfirm}
+          onClick={handleDelete}
           className="flex-1 text-[12px] font-medium bg-[#EF4444] text-white rounded-lg py-2.5 hover:bg-[#96201a] transition-colors"
         >
           Confirm delete
@@ -426,17 +466,16 @@ export function ConfirmDeleteButton({ onConfirm, label = "Delete", message, titl
   return (
     <button
       type="button"
-      onClick={() => setArmed(true)}
+      onClick={handleConfirm}
       className="flex items-center justify-center gap-1.5 text-[12px] font-medium text-[#EF4444] border border-[#EF4444]/25 rounded-lg py-2.5 px-3.5 hover:bg-[#FEE2E2] transition-colors"
     >
       <Trash2 size={13} /> {label}
     </button>
   );
-}
+});
 
-// Pulsing placeholder rows shown inside any data table while a live fetch is
-// in flight. `widths` roughly mimics the real column content shape.
-export function SkeletonRows({ cols, rows = 5 }) {
+// ─── SkeletonRows ────────────────────────────────────────────────────
+export const SkeletonRows = memo(function SkeletonRows({ cols, rows = 5 }) {
   const widths = ["w-32", "w-24", "w-20", "w-16", "w-20", "w-14", "w-10"];
   return (
     <>
@@ -451,12 +490,16 @@ export function SkeletonRows({ cols, rows = 5 }) {
       ))}
     </>
   );
-}
+});
 
-// Shown when a live table loads successfully but has zero records — the
-// onboarding moment for a fresh company. Filtered-empty states ("no match")
-// stay separate; this is specifically "you haven't created anything yet."
-export function EmptyState({ icon: Icon, title, hint, actionLabel, onAction }) {
+// ─── EmptyState ──────────────────────────────────────────────────────
+export const EmptyState = memo(function EmptyState({
+  icon: Icon,
+  title,
+  hint,
+  actionLabel,
+  onAction,
+}) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-14 px-6">
       <div
@@ -477,7 +520,7 @@ export function EmptyState({ icon: Icon, title, hint, actionLabel, onAction }) {
       )}
     </div>
   );
-}
+});
 
 export function MenuIcon() {
   return (
@@ -497,41 +540,22 @@ export function MenuIcon() {
   );
 }
 
-// The global stylesheet — every button style, every @keyframes animation,
-// and the Google Fonts import this entire application relies on. This
-// used to be defined only deep inside the authenticated app shell's own
-// render tree, which meant it was never present in the DOM at all while
-// Login, Signup, the OAuth completion screen, or the loading screen were
-// showing — none of those render anywhere near that part of the tree.
-// The practical effect: every "Continue," "Login," and "Finish Setup"
-// button on every pre-authentication screen rendered with zero styling
-// applied, and the loading screen's logo animation (section 46) never
-// actually animated, because its own @keyframes were defined in the same
-// unreachable block. Moved here, into the true application root,
-// rendered once, unconditionally, before ErrorBoundary or SmartManager —
-// so it exists in the DOM from the very first paint, regardless of
-// session state, regardless of whether anything downstream even
-// mounts successfully.
+// ─── GlobalStyles ────────────────────────────────────────────────────
+// We'll render this once – it's safe to keep as a plain component
+// because it only outputs static style tags.
 export function GlobalStyles() {
   return (
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
-        /* Smart Manager design tokens — adapted from the brand's design
-           system into CSS custom properties so they're usable directly in
-           Tailwind's arbitrary-value syntax (e.g. shadow-[var(--shadow-md)])
-           without needing a JS import that a single-file artifact can't
-           resolve. Kijani Kuu (#16A34A) is the brand's primary green,
-           carried through from the Smart Manager logo mark and matched
-           exactly to the reference design system's color tokens. */
         :root {
-          --color-primary: #16A34A;        /* Kijani Kuu */
-          --color-primary-light: #22C55E;  /* Kijani Nyororo */
+          --color-primary: #16A34A;
+          --color-primary-light: #22C55E;
           --color-primary-dark: #15803D;
-          --color-primary-pale: #DCFCE7;   /* Kijani Mwanga */
-          --color-secondary: #111827;      /* Maandishi */
-          --color-danger-pale: #FEE2E2;    /* Nyekundu Mwanga */
-          --color-surface-alt: #F8FAFC;    /* Background, per Design System 2.0 */
+          --color-primary-pale: #DCFCE7;
+          --color-secondary: #111827;
+          --color-danger-pale: #FEE2E2;
+          --color-surface-alt: #F8FAFC;
           --color-success: #16A34A;
           --color-warning: #F59E0B;
           --color-danger: #EF4444;
@@ -545,14 +569,6 @@ export function GlobalStyles() {
 
         h1, h2, h3 { font-family: 'Poppins', system-ui, sans-serif; font-weight: 600; }
 
-        /* Namba (numbers): Inter Medium per the design system — every
-           monetary figure, ID, and count in this app uses Tailwind's
-           font-mono utility for column alignment, which by default maps
-           to an actual monospace stack. Overriding the class itself here
-           (rather than touching all ~280 call sites individually) makes
-           every one of them Inter Medium in one place, and keeps digit
-           columns aligned via OpenType tabular-figure features instead of
-           relying on a monospace typeface to do it. */
         .font-mono {
           font-family: 'Inter', system-ui, sans-serif !important;
           font-weight: 500;
@@ -569,14 +585,12 @@ export function GlobalStyles() {
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes loadingBar { 0% { transform: translateX(-100%) } 100% { transform: translateX(250%) } }
 
-        /* Shimmer skeleton — a moving gradient reads as "actively loading"
-           more clearly than a uniform pulse. */
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         .skeleton-shimmer {
           background: linear-gradient(90deg, #F1F3F5 25%, #E9ECEF 50%, #F1F3F5 75%);
           background-size: 200% 100%;
           animation: shimmer 1.6s ease-in-out infinite;
         }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
         .btn-primary {
           position: relative;
@@ -608,18 +622,6 @@ export function GlobalStyles() {
         .btn-secondary:hover:not(:disabled) { background: #DCFCE7; }
         .btn-secondary:active:not(:disabled) { transform: translateY(0.5px); }
 
-        /* ── Premium UI token layer ──────────────────────────────────────
-           One CSS block that touches the entire product:
-           ① Table rows: subtler hover, smoother feel
-           ② Form inputs: consistent placeholder color (not already in Tailwind)
-           ③ Select: removes the awkward default arrow on Webkit
-           ④ Card headers: consistent weight and letter-spacing for every
-              section title that uses a plain <h3>
-           ⑤ Sidebar active item: a solid green left-border accent so the
-              active nav item reads clearly without needing a background fill
-           ⑥ Scrollbar: thin & brand-colored on Webkit (Chrome/Safari/Edge),
-              already transparent on Firefox via the existing rule
-           ─────────────────────────────────────────────────────────────── */
         tr:hover td { background-color: rgba(248,250,252,.9); }
         ::placeholder { color: #9CA3AF; opacity: 1; }
         select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px !important; }
@@ -633,13 +635,6 @@ export function GlobalStyles() {
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        /* Kitufe cha Icon — a circular, solid-green icon-only button for a
-           primary action with no room (or need) for a text label. Not yet
-           applied anywhere specific: this app's existing icon-only buttons
-           are predominantly navigation/utility (menu toggle, notification
-           bell), which should stay neutral by convention — a bare icon
-           button only belongs in this style when the action itself is a
-           primary create/confirm, the same rule that governs .btn-primary. */
         .btn-icon-primary {
           background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
           color: #FFFFFF;
@@ -670,19 +665,6 @@ export function GlobalStyles() {
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
 
-        /* Real Dark Mode — deliberately scoped to the App Shell only
-           (sidebar and topbar), not the whole application. A blanket
-           rewrite across 23,000+ lines of hardcoded Tailwind colors
-           would be a real, large undertaking with real risk of a
-           half-correct result — some screens right, others silently
-           broken — which is worse than not having it at all. This is
-           the honest alternative: a real, verified dark surface for the
-           two elements a person sees on every single screen regardless
-           of which module they're in, built with ordinary CSS
-           specificity (two classes always beat one) rather than
-           !important overrides, so it can't silently fight with
-           anything else. Module content underneath stays light-themed
-           — Settings says so directly, not implied.  */
         .dark-shell.bg-white { background-color: #0F172A; }
         .dark-shell .bg-white { background-color: #1E293B; }
         .dark-shell .bg-slate-100 { background-color: #334155; }
@@ -698,12 +680,6 @@ export function GlobalStyles() {
         .dark-shell .brand-wordmark { color: #F1F5F9; }
         .brand-wordmark { color: #111827; }
 
-        /* Design System 2.0 motion layer — pure, scoped CSS, no per-
-           component rewrites across 22 modules that could regress them.
-           Honest note on "ripple": a true Material ripple needs JS
-           tracking the tap point; the browser-native equivalent below
-           (a 100ms press-down scale on every real button) delivers the
-           same felt feedback without a library. Reduced-motion honored. */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         @keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
         .module-fade { animation: fadeInUp .25s ease-out; }
@@ -716,21 +692,9 @@ export function GlobalStyles() {
           button:active:not(:disabled) { transform: none; }
         }
 
-        /* WCAG 2.2 AA — visible keyboard focus (SC 2.4.7 / 2.4.11).
-           :focus-visible fires for keyboard navigation only, so mouse
-           users see no ring while a person tabbing through gets a real,
-           high-contrast indicator on every interactive element — the
-           brand green at 2px with offset, never clipped by the element
-           itself. This is the single highest-leverage accessibility rule
-           a stylesheet can carry: one selector, every screen, every
-           module, including everything built in all future sections. */
         :focus-visible { outline: 2px solid #16A34A; outline-offset: 2px; }
         .dark-shell :focus-visible { outline-color: #4ADE80; }
 
-        /* Pro-grade card response — on hover-capable devices only (no
-           sticky hover states on touch), cards with the standard shadow
-           lift subtly toward the cursor. One rule, every card, all 22
-           modules; transform respects reduced-motion below. */
         @media (hover: hover) {
           .rounded-xl.shadow-sm { transition: box-shadow .2s ease, transform .2s ease; }
           .rounded-xl.shadow-sm:hover { box-shadow: 0 6px 20px rgba(15, 42, 74, 0.09); transform: translateY(-1px); }
@@ -739,10 +703,6 @@ export function GlobalStyles() {
           .rounded-xl.shadow-sm:hover { transform: none; }
         }
 
-        /* Accessibility — WCAG 2.2 AA controls (section: Settings >
-           Appearance). Text size scales the root so every derived size
-           in all 22 modules follows (SC 1.4.4); high-contrast darkens
-           text and strengthens borders app-wide with one class. */
         .text-size-large { font-size: 112.5%; }
         .text-size-xl { font-size: 125%; }
         .high-contrast { color: #000; }
@@ -753,55 +713,53 @@ export function GlobalStyles() {
   );
 }
 
-export function AppLock({ children }) {
+// ─── AppLock ──────────────────────────────────────────────────────────
+export const AppLock = memo(function AppLock({ children }) {
   const [locked, setLocked] = useState(false);
   const [hasPin, setHasPin] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
+  const bioCred = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return getStorageItem("bs_bio_applock");
+  }, []);
 
   useEffect(() => {
-    const storedHash =
-      typeof window !== "undefined" ? window.localStorage.getItem("bs_app_lock_hash") : null;
+    const storedHash = getStorageItem("bs_app_lock_hash");
     if (storedHash) {
       setHasPin(true);
       setLocked(true);
     }
   }, []);
 
-  // Real re-lock on backgrounding — the actual point of an app lock: if
-  // someone hands their phone to a friend after switching away and back,
-  // the app should ask again, not stay open indefinitely.
   useEffect(() => {
     if (!hasPin) return;
-    function handleVisibility() {
+    const handleVisibility = () => {
       if (document.hidden) setLocked(true);
-    }
+    };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [hasPin]);
 
-  async function unlock(e) {
-    e.preventDefault();
-    const storedHash = window.localStorage.getItem("bs_app_lock_hash");
-    const enteredHash = await hashPin(pin);
-    if (enteredHash === storedHash) {
-      setLocked(false);
-      setPin("");
-      setError(false);
-    } else {
-      setError(true);
-      setPin("");
-    }
-  }
+  const unlock = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const storedHash = getStorageItem("bs_app_lock_hash");
+      const enteredHash = await hashPin(pin);
+      if (enteredHash === storedHash) {
+        setLocked(false);
+        setPin("");
+        setError(false);
+      } else {
+        setError(true);
+        setPin("");
+      }
+    },
+    [pin],
+  );
 
-  // Biometric unlock — the same real WebAuthn machinery attendance uses:
-  // a platform authenticator with userVerification "required" raises the
-  // OS's actual fingerprint or Face ID dialog. Offered only when a
-  // credential was genuinely enrolled on this device; PIN remains the
-  // fallback, matching how phones themselves treat biometrics.
-  const bioCred =
-    typeof window !== "undefined" ? window.localStorage.getItem("bs_bio_applock") : null;
-  async function unlockBiometric() {
+  const unlockBiometric = useCallback(async () => {
+    if (!bioCred) return;
     try {
       const assertion = await navigator.credentials.get({
         publicKey: {
@@ -819,7 +777,13 @@ export function AppLock({ children }) {
     } catch (_e) {
       setError(true);
     }
-  }
+  }, [bioCred]);
+
+  const handlePinChange = useCallback((e) => {
+    const val = e.target.value.replace(/\D/g, "");
+    setPin(val);
+    setError(false);
+  }, []);
 
   if (!locked) return children;
 
@@ -843,10 +807,7 @@ export function AppLock({ children }) {
             inputMode="numeric"
             maxLength={6}
             value={pin}
-            onChange={(e) => {
-              setPin(e.target.value.replace(/\D/g, ""));
-              setError(false);
-            }}
+            onChange={handlePinChange}
             autoFocus
             className="w-full text-center text-[22px] tracking-[0.5em] bg-white border border-slate-200 rounded-xl py-3 outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]/30 transition-all"
             placeholder="••••"
@@ -871,4 +832,4 @@ export function AppLock({ children }) {
       </div>
     </div>
   );
-}
+});
