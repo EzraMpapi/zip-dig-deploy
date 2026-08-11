@@ -84,7 +84,28 @@ async function guard(fn, fallback) {
 export async function openWorkspace(userId) {
   const switched = setWorkspaceId(userId);
   if (switched) resetKeyCache();
-  await guard(() => sync.start(), null);
+
+  try {
+    // Ensure sync engine is started
+    if (sync && typeof sync.start === "function") {
+      await sync.start();
+      console.debug("[offline] sync engine started for workspace:", userId);
+    } else {
+      console.warn("[offline] sync engine not available — offline features may not work");
+    }
+  } catch (error) {
+    console.error("[offline] failed to start sync engine:", error);
+  }
+
+  // Refresh counters after opening workspace
+  try {
+    if (sync && typeof sync.refreshCounters === "function") {
+      await sync.refreshCounters();
+    }
+  } catch (_e) {
+    // Counters are cosmetic — ignore
+  }
+
   return currentWorkspaceId();
 }
 
@@ -93,9 +114,16 @@ export function workspaceId() {
 }
 
 export async function resetWorkspace() {
-  await guard(() => deleteWorkspaceDatabase(), null);
-  resetKeyCache();
-  await guard(() => sync.refreshCounters(), null);
+  try {
+    await guard(() => deleteWorkspaceDatabase(), null);
+    resetKeyCache();
+    if (sync && typeof sync.refreshCounters === "function") {
+      await guard(() => sync.refreshCounters(), null);
+    }
+  } catch (error) {
+    console.error("[offline] failed to reset workspace:", error);
+    throw error;
+  }
 }
 
 /* ── read path ───────────────────────────────────────────────────────────── */
@@ -132,7 +160,9 @@ export async function applyOfflineInsert(table, body) {
       await putLocalRow(table, row, PENDING);
       await enqueue({ table, op: OP_INSERT, recordId: row.id, payload: row });
     }
-    await sync.refreshCounters();
+    if (sync && typeof sync.refreshCounters === "function") {
+      await sync.refreshCounters();
+    }
   }, null);
   return Array.isArray(body) ? rows : rows[0];
 }
@@ -161,7 +191,9 @@ export async function applyOfflineUpdate(table, filters, patch) {
       await enqueue({ table, op: OP_UPDATE, filters, payload: stamped });
       out.push(stamped);
     }
-    await sync.refreshCounters();
+    if (sync && typeof sync.refreshCounters === "function") {
+      await sync.refreshCounters();
+    }
     return out;
   }, [stamped]);
   return updated;
@@ -175,7 +207,9 @@ export async function applyOfflineDelete(table, filters) {
       await enqueue({ table, op: OP_DELETE, recordId: match.id, filters });
     }
     if (!matches.length) await enqueue({ table, op: OP_DELETE, filters });
-    await sync.refreshCounters();
+    if (sync && typeof sync.refreshCounters === "function") {
+      await sync.refreshCounters();
+    }
     return matches.map((m) => m.data);
   }, []);
   return removed;
@@ -220,7 +254,9 @@ export async function importWorkspace(backup) {
     throw new Error("Not a Smart Manager workspace backup file.");
   }
   const restored = await guard(() => importRecords(backup.records), 0);
-  await guard(() => sync.refreshCounters(), null);
+  if (sync && typeof sync.refreshCounters === "function") {
+    await guard(() => sync.refreshCounters(), null);
+  }
   return restored;
 }
 
