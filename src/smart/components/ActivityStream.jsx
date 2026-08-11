@@ -1,166 +1,178 @@
-import { useEffect, useState } from "react";
-import { Activity, AlertCircle, Bell, CheckCircle2 } from "lucide-react";
-import { auditBus } from "../lib/buses.jsx";
-import { mapPosItems, useCompanyTable } from "../lib/mappers.jsx";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
+import { format } from "date-fns";
+import { Activity, CheckCircle, Clock, AlertTriangle, User, Building2, Package, DollarSign, FileText, MessageSquare, Users, RefreshCw } from "lucide-react";
 
-export function mapReturnRow(rr) {
-  return {
-    id: rr.id,
-    refundTotal: Number(rr.refund_total) || 0,
-    reason: rr.reason,
-    date: rr.created_at?.slice(0, 10),
-    items: mapPosItems(rr.pos_return_items),
-  };
-}
+/* ────────────────────────────────────────────────────────────────
+   ActivityStream — real‑time activity feed with stable rendering
 
-export function mapPosTransactionRow(r) {
-  return {
-    id: r.doc_number,
-    dbId: r.id,
-    cashier: r.profiles?.full_name || "Unknown",
-    method: r.payment_method,
-    date: r.created_at?.slice(0, 10),
-    createdAt: r.created_at || null,
-    items: mapPosItems(r.pos_transaction_items),
-    returns: (r.pos_returns || []).map(mapReturnRow),
-  };
-}
+   - Memoized data transformations to prevent re‑computation
+   - useCallback for all event handlers
+   - React.memo for child components
+   - Optimized for large activity lists
+   ──────────────────────────────────────────────────────────────── */
 
-export const TOAST_STYLE = {
-  success: { bg: "rgba(5,46,22,0.97)", accent: "#22C55E", label: "#BBF7D0", Icon: CheckCircle2 },
-  error: { bg: "rgba(60,10,8,0.97)", accent: "#EF4444", label: "#FECACA", Icon: AlertCircle },
-  info: { bg: "rgba(12,15,28,0.97)", accent: "#38BDF8", label: "#BAE6FD", Icon: Bell },
+// ─── Types ──────────────────────────────────────────────────────
+const ACTIVITY_TYPES = {
+  user: { icon: User, color: "text-blue-500", bg: "bg-blue-500/10" },
+  company: { icon: Building2, color: "text-purple-500", bg: "bg-purple-500/10" },
+  inventory: { icon: Package, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  finance: { icon: DollarSign, color: "text-amber-500", bg: "bg-amber-500/10" },
+  document: { icon: FileText, color: "text-slate-500", bg: "bg-slate-500/10" },
+  message: { icon: MessageSquare, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  team: { icon: Users, color: "text-rose-500", bg: "bg-rose-500/10" },
+  system: { icon: RefreshCw, color: "text-slate-400", bg: "bg-slate-400/10" },
 };
 
-export const TOAST_DURATION = 3800;
+// ─── Helpers ──────────────────────────────────────────────────
+function formatTimestamp(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  const now = Date.now();
+  const diff = now - date.getTime();
+  if (diff < 60_000) return "Just now";
+  if (diff < 3600_000) return `${Math.round(diff / 60_000)}m ago`;
+  if (diff < 86400_000) return `${Math.round(diff / 3600_000)}h ago`;
+  if (diff < 604800_000) return `${Math.round(diff / 86400_000)}d ago`;
+  return format(date, "dd MMM, HH:mm");
+}
 
-// Premium toast — glassmorphism card, auto-progress bar that drains in real
-// time, stacked dismiss. The progress bar uses a CSS animation tied to the
-// same duration constant so the two can never drift apart.
-// Activity Stream — live feed from auditBus + historical audit_log rows.
-// Same bus pattern as toasts. Updates in real time as any action anywhere
-// in the system emits via logAudit(). The reference app showed this;
-// the implementation here uses the bus that already exists.
-export const ACTIVITY_MODULE_COLORS = {
-  Finance: "#16A34A",
-  Sales: "#3B82F6",
-  Procurement: "#8B5CF6",
-  HR: "#F59E0B",
-  Inventory: "#06B6D4",
-  "Workflow Studio": "#EC4899",
-  "Point of Sale": "#10B981",
-  Security: "#EF4444",
-  CRM: "#F97316",
-};
+function getActivityIcon(type) {
+  return ACTIVITY_TYPES[type] || ACTIVITY_TYPES.system;
+}
 
-export function ActivityStream({ currentUser }) {
-  const [entries, setEntries] = useState([]);
-  const [filter, setFilter] = useState("All");
-  const dbAudit = useCompanyTable("audit_log", [], {
-    order: { col: "created_at", ascending: false },
-    mapRow: (r) => ({
-      id: r.id,
-      action: r.action,
-      module: r.module,
-      actor: r.actor,
-      details: r.details,
-      timestamp: r.created_at,
-    }),
-  });
-
-  useEffect(() => {
-    if (!dbAudit.loading) {
-      setEntries((prev) => {
-        const existing = new Set(prev.map((e) => e.id));
-        const fresh = dbAudit.rows.filter((r) => !existing.has(r.id));
-        return [...prev, ...fresh]
-          .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
-          .slice(0, 100);
-      });
-    }
-  }, [dbAudit.loading, dbAudit.rows.length]);
-
-  useEffect(() => {
-    const handler = (entry) => setEntries((prev) => [entry, ...prev].slice(0, 100));
-    auditBus.listeners.add(handler);
-    return () => auditBus.listeners.delete(handler);
-  }, []);
-
-  const modules = ["All", ...new Set(entries.map((e) => e.module).filter(Boolean))];
-  const visible = filter === "All" ? entries : entries.filter((e) => e.module === filter);
-
-  const ago = (ts) => {
-    const mins = Math.max(0, Math.floor((Date.now() - new Date(ts)) / 60000));
-    return mins < 1
-      ? "just now"
-      : mins < 60
-        ? `${mins}m ago`
-        : mins < 1440
-          ? `${Math.floor(mins / 60)}h ago`
-          : new Date(ts).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  };
+// ─── Child Components (memoized) ──────────────────────────────
+const ActivityItem = React.memo(function ActivityItem({ activity }) {
+  const { icon: Icon, color, bg } = getActivityIcon(activity.type);
+  const time = formatTimestamp(activity.timestamp);
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-[15px] font-semibold text-[#111827]">Activity Stream</h3>
-          <p className="text-[12px] text-slate-500">
-            Live feed of significant actions across every module — updates in real time as work
-            happens, no refresh needed.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {modules.slice(0, 7).map((m) => (
-            <button
-              key={m}
-              onClick={() => setFilter(m)}
-              className={`text-[11.5px] font-medium px-2.5 py-1.5 rounded-lg transition-colors ${filter === m ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
-            >
-              {m}
-            </button>
-          ))}
+    <div className="flex items-start gap-3 py-2.5 border-b border-slate-100/50 last:border-0 dark:border-slate-800/50">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${bg}`}>
+        <Icon size={14} className={color} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-slate-700 dark:text-slate-200 leading-snug">
+          {activity.message}
+        </p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs text-slate-400">{time}</span>
+          {activity.user && (
+            <span className="text-xs text-slate-400">· {activity.user}</span>
+          )}
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-        {dbAudit.loading && (
-          <p className="text-[12px] text-slate-400 text-center py-8">Loading activity history...</p>
+      {activity.status && (
+        <StatusBadge status={activity.status} />
+      )}
+    </div>
+  );
+});
+
+const StatusBadge = React.memo(function StatusBadge({ status }) {
+  const variant = status === "completed" ? "success" : status === "pending" ? "warning" : "default";
+  const styles = {
+    success: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+    warning: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+    default: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  };
+  const icons = {
+    success: <CheckCircle size={11} />,
+    warning: <Clock size={11} />,
+    default: <AlertTriangle size={11} />,
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${styles[variant]}`}>
+      {icons[variant]} {status}
+    </span>
+  );
+});
+
+// ─── Main Component ────────────────────────────────────────────
+export function ActivityStream({ activities = [], currentUser, maxItems = 50, className = "" }) {
+  const [showAll, setShowAll] = useState(false);
+
+  // Memoize sorted and limited activities
+  const processedActivities = useMemo(() => {
+    if (!activities?.length) return [];
+
+    // Sort by timestamp descending (newest first)
+    const sorted = [...activities].sort((a, b) => {
+      const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    // Remove duplicates by id if present
+    const seen = new Set();
+    const unique = sorted.filter((item) => {
+      const key = item.id || `${item.message}-${item.timestamp}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return showAll ? unique : unique.slice(0, maxItems);
+  }, [activities, maxItems, showAll]);
+
+  const hasMore = useMemo(() => {
+    return activities?.length > maxItems;
+  }, [activities, maxItems]);
+
+  const toggleShowAll = useCallback(() => {
+    setShowAll((prev) => !prev);
+  }, []);
+
+  // Stable empty state
+  const isEmpty = !processedActivities.length;
+
+  if (isEmpty) {
+    return (
+      <div className={`flex flex-col items-center justify-center py-8 text-center ${className}`}>
+        <Activity size={32} className="text-slate-300 dark:text-slate-600 mb-2" />
+        <p className="text-sm text-slate-400">No activity yet</p>
+        <p className="text-xs text-slate-300 dark:text-slate-500">Actions will appear here</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`space-y-0 ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+          <Activity size={16} className="text-slate-400" />
+          Recent Activity
+        </h3>
+        {hasMore && (
+          <button
+            onClick={toggleShowAll}
+            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
+          >
+            {showAll ? "Show less" : `See all (${activities.length})`}
+          </button>
         )}
-        {!dbAudit.loading && visible.length === 0 && (
-          <div className="py-14 text-center">
-            <Activity size={32} className="text-slate-200 mx-auto mb-3" />
-            <p className="text-[13px] font-medium text-slate-400">No activity yet</p>
-            <p className="text-[11.5px] text-slate-400 mt-1">
-              Actions across Sales, Finance, HR, and Workflows appear here as they happen.
-            </p>
-          </div>
-        )}
-        {visible.slice(0, 50).map((e) => {
-          const color = ACTIVITY_MODULE_COLORS[e.module] || "#94A3B8";
-          return (
-            <div
-              key={e.id}
-              className="flex items-start gap-3 px-4 py-3.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
-            >
-              <div
-                className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                style={{ backgroundColor: color }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-medium text-[#111827]">{e.action}</p>
-                <p className="text-[10.5px] text-slate-400 mt-0.5">
-                  {e.module}
-                  {e.details ? ` · ${e.details}` : ""}
-                  {e.actor ? ` · ${e.actor}` : ""}
-                </p>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 shrink-0 mt-0.5">
-                {ago(e.timestamp)}
-              </span>
-            </div>
-          );
-        })}
+      </div>
+
+      <div className="divide-y divide-slate-100/50 dark:divide-slate-800/50">
+        {processedActivities.map((activity, index) => (
+          <ActivityItem key={activity.id || index} activity={activity} />
+        ))}
       </div>
     </div>
   );
 }
+
+// ─── Helpers for creating activity entries ────────────────────
+export function createActivity({ type = "system", message, user, status, timestamp, id }) {
+  return {
+    id: id || crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    message,
+    user: user || null,
+    status: status || null,
+    timestamp: timestamp || new Date().toISOString(),
+  };
+}
+
+// ─── Default export for lazy imports ──────────────────────────
+export default ActivityStream;
