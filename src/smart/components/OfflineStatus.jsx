@@ -97,6 +97,7 @@ export function OfflineWorkspacePanel({ onClose }) {
   }
 
   async function doExport(moduleId) {
+    if (typeof window === "undefined") return;
     const backup = await offline.exportWorkspace(moduleId);
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -123,6 +124,7 @@ export function OfflineWorkspacePanel({ onClose }) {
   }
 
   const total = modules.reduce((sum, m) => sum + m.count, 0);
+  const isOfflineSupported = typeof window !== "undefined" && offline.isOfflineAvailable?.();
 
   return (
     <div
@@ -159,7 +161,7 @@ export function OfflineWorkspacePanel({ onClose }) {
         </div>
 
         <div className="max-h-64 overflow-y-auto px-4 py-2">
-          {!offline.offlineAvailable() && (
+          {!isOfflineSupported && (
             <p className="py-4 text-center text-[11px] text-amber-400">
               This browser blocks local storage, so offline mode is unavailable in this session.
             </p>
@@ -186,7 +188,7 @@ export function OfflineWorkspacePanel({ onClose }) {
               </button>
             </div>
           ))}
-          {offline.offlineAvailable() && !modules.length && (
+          {isOfflineSupported && !modules.length && (
             <p className="py-4 text-center text-[11px] text-slate-500">
               Nothing stored locally yet — open a module while online and its data is mirrored here.
             </p>
