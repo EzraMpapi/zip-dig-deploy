@@ -96,6 +96,7 @@ export function isOffline() {
 
 export function configureTransport(fn) {
   transport = fn;
+  console.debug("[sync] Transport configured");
 }
 
 /* Any backend failure — network, 5xx, auth, timeout — flips the engine to
@@ -104,6 +105,7 @@ export function configureTransport(fn) {
 export function reportBackendFailure(error) {
   state.reachable = false;
   state.lastError = error ? String(error.message || error) : "Backend unreachable";
+  console.warn("[sync] Backend failure reported:", state.lastError);
   emit();
   scheduleDrain(RETRY_TICK_MS);
 }
@@ -112,6 +114,7 @@ export function reportBackendSuccess() {
   if (!state.reachable) {
     state.reachable = true;
     state.lastError = null;
+    console.debug("[sync] Backend reachable again");
     emit();
     scheduleDrain(300);
   }
@@ -224,7 +227,11 @@ function isPermanent(error) {
 }
 
 export async function drain({ manual = false } = {}) {
-  if (!transport || draining) return getStatus();
+  if (!transport) {
+    console.warn("[sync] drain: no transport configured — skipping");
+    return getStatus();
+  }
+  if (draining) return getStatus();
   if (!manual && Date.now() < nextAttemptAt) {
     scheduleDrain(RETRY_TICK_MS);
     return getStatus();
@@ -243,6 +250,17 @@ export async function drain({ manual = false } = {}) {
     emit();
     return getStatus();
   }
+
+  if (entries.length === 0) {
+    draining = false;
+    state.syncing = false;
+    state.lastSyncAt = new Date().toISOString();
+    await setMeta("last_sync_at", state.lastSyncAt);
+    emit();
+    return getStatus();
+  }
+
+  console.debug(`[sync] drain: ${entries.length} pending entries`);
 
   let hitNetworkWall = false;
   for (const entry of entries) {
@@ -288,6 +306,7 @@ export async function drain({ manual = false } = {}) {
   draining = false;
   await refreshCounters();
   if (hitNetworkWall) scheduleDrain(RETRY_TICK_MS);
+  emit();
   return getStatus();
 }
 
@@ -300,6 +319,7 @@ export async function start() {
   enabled = true;
   state.lastSyncAt = await getMeta("last_sync_at", null);
   await refreshCounters();
+
   if (typeof window !== "undefined") {
     window.addEventListener("online", () => {
       state.online = true;
@@ -318,6 +338,15 @@ export async function start() {
       if (document.visibilityState === "visible") scheduleDrain(1_000);
     });
   }
+
+  // If transport is already configured, attempt an initial drain.
+  if (transport) {
+    console.debug("[sync] start: transport present, scheduling initial drain");
+    scheduleDrain(500);
+  } else {
+    console.debug("[sync] start: no transport yet — will drain once transport is configured");
+  }
+
   emit();
   scheduleDrain(2_000);
 }
