@@ -158,7 +158,7 @@ export function SmartManager() {
     }
     (async () => {
       try {
-        const user = await authGetUser(token);
+        const user = await authGetUser(); // no argument needed – reads token from localStorage
         const profileRows = await sb("profiles").select("*,companies(*)").eq("id", user.id).run();
         const profile = profileRows?.[0];
         if (!profile) {
@@ -222,63 +222,66 @@ export function SmartManager() {
   // write once different real users belong to different companies.
   const [company, setCompany] = useState(() => {
     // Restore saved profile (logo, cover photo, social links etc.) from localStorage
-    try {
-      const saved = localStorage.getItem("bs_company_profile");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          id: "",
-          name: "BEIRAHISI HARDWARE",
-          owner: "EzyMP",
-          industry: "Wholesale & Hardware",
-          country: "Tanzania",
-          currency: "TZS",
-          taxRate: 18,
-          timezone: "Africa/Dar_es_Salaam",
-          businessScale: "large",
-          createdAt: "2019-03-12",
-          receiptWidth: "80mm",
-          receiptFooter: "Thank you for your business!",
-          receiptShowLogo: true,
-          logo: null,
-          coverPhoto: null,
-          phone: "",
-          email: "",
-          website: "",
-          address: "",
-          city: "",
-          postalCode: "",
-          tin: "",
-          regNumber: "",
-          tagline: "",
-          brandColor: "#16A34A",
-          businessType: "Private Limited Company",
-          foundedYear: "",
-          description: "",
-          facebook: "",
-          instagram: "",
-          twitter: "",
-          linkedin: "",
-          tiktok: "",
-          whatsappBusiness: "",
-          bankName: "",
-          bankAccountName: "",
-          bankAccountNo: "",
-          bankBranch: "",
-          bankSwift: "",
-          businessHours: {
-            Mon: { open: "08:00", close: "17:00", closed: false },
-            Tue: { open: "08:00", close: "17:00", closed: false },
-            Wed: { open: "08:00", close: "17:00", closed: false },
-            Thu: { open: "08:00", close: "17:00", closed: false },
-            Fri: { open: "08:00", close: "17:00", closed: false },
-            Sat: { open: "09:00", close: "13:00", closed: false },
-            Sun: { open: "", close: "", closed: true },
-          },
-          ...parsed,
-        };
-      }
-    } catch (_e) {}
+    // SAFE: Check if window is defined before accessing localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("bs_company_profile");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            id: "",
+            name: "BEIRAHISI HARDWARE",
+            owner: "EzyMP",
+            industry: "Wholesale & Hardware",
+            country: "Tanzania",
+            currency: "TZS",
+            taxRate: 18,
+            timezone: "Africa/Dar_es_Salaam",
+            businessScale: "large",
+            createdAt: "2019-03-12",
+            receiptWidth: "80mm",
+            receiptFooter: "Thank you for your business!",
+            receiptShowLogo: true,
+            logo: null,
+            coverPhoto: null,
+            phone: "",
+            email: "",
+            website: "",
+            address: "",
+            city: "",
+            postalCode: "",
+            tin: "",
+            regNumber: "",
+            tagline: "",
+            brandColor: "#16A34A",
+            businessType: "Private Limited Company",
+            foundedYear: "",
+            description: "",
+            facebook: "",
+            instagram: "",
+            twitter: "",
+            linkedin: "",
+            tiktok: "",
+            whatsappBusiness: "",
+            bankName: "",
+            bankAccountName: "",
+            bankAccountNo: "",
+            bankBranch: "",
+            bankSwift: "",
+            businessHours: {
+              Mon: { open: "08:00", close: "17:00", closed: false },
+              Tue: { open: "08:00", close: "17:00", closed: false },
+              Wed: { open: "08:00", close: "17:00", closed: false },
+              Thu: { open: "08:00", close: "17:00", closed: false },
+              Fri: { open: "08:00", close: "17:00", closed: false },
+              Sat: { open: "09:00", close: "13:00", closed: false },
+              Sun: { open: "", close: "", closed: true },
+            },
+            ...parsed,
+          };
+        }
+      } catch (_e) {}
+    }
     return {
       id: "",
       name: "BEIRAHISI HARDWARE",
@@ -508,11 +511,15 @@ export function SmartManager() {
 
   // ── Dark mode ────────────────────────────────────────────────────────────
   const [darkMode, setDarkMode] = React.useState(() => {
-    try {
-      return localStorage.getItem("bs_dark") === "1";
-    } catch (_e) {
-      return false;
+    // SAFE: Check if window is defined
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("bs_dark") === "1";
+      } catch (_e) {
+        return false;
+      }
     }
+    return false;
   });
   React.useEffect(() => {
     const root = document.documentElement;
