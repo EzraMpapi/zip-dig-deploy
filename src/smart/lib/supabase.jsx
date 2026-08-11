@@ -1,4 +1,5 @@
 import * as offline from "./offline/index.jsx";
+
 /* ────────────────────────────────────────────────────────────────
    SUPABASE CLIENT — hand-rolled, fetch‑based (no SDK)
 
@@ -6,6 +7,10 @@ import * as offline from "./offline/index.jsx";
    them in .env locally and in Netlify/Vercel → Environment Variables for
    deploys. The fallbacks keep the demo project working, so a fresh clone
    still runs with `npm install && npm run dev`.
+
+   ⚠️ IMPORTANT: For backend to work, you MUST call configureSupabase()
+   with the correct URL and anon key (either from env or manually) before
+   any API call. This file exports it; it's called in clientServices.jsx.
    ──────────────────────────────────────────────────────────────── */
 
 const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
@@ -13,11 +18,17 @@ const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
 let SUPABASE_URL = ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
 let SUPABASE_ANON_KEY = ENV.VITE_SUPABASE_ANON_KEY || "";
 
+let transportConfigured = false;
+
+// ---- Core configuration ----
 export function configureSupabase({ url, anonKey } = {}) {
   if (url) SUPABASE_URL = url;
   if (anonKey) SUPABASE_ANON_KEY = anonKey;
-  ensureTransportConfigured();
+  // Re-configure transport so it uses updated URL/key
+  ensureTransportConfigured(true);
   IS_CONFIGURED = isSupabaseConfigured();
+  console.debug("[supabase] configured with URL:", SUPABASE_URL);
+  return { url: SUPABASE_URL, configured: IS_CONFIGURED };
 }
 
 export function getSupabaseUrl() {
@@ -31,14 +42,16 @@ export function isSupabaseConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
+// ---- Demo override ----
 export let DEMO_OVERRIDE = false;
 export function setDemoOverride(v) {
   DEMO_OVERRIDE = v;
 }
 
+// ---- IS_CONFIGURED as live binding ----
 export let IS_CONFIGURED = isSupabaseConfigured();
 
-// ---- auth functions ----
+// ---- Authentication functions ----
 export async function authGetUser() {
   const token =
     typeof window !== "undefined" ? window.localStorage?.getItem("bs_access_token") : null;
@@ -52,7 +65,8 @@ export async function authGetUser() {
     });
     if (!res.ok) return null;
     return await res.json();
-  } catch {
+  } catch (error) {
+    console.error("[supabase] authGetUser error:", error);
     return null;
   }
 }
@@ -64,7 +78,6 @@ export async function authSignOut() {
   return { success: true };
 }
 
-// ---- added: sign in, sign up, OAuth, RPC ----
 function authApiHeaders() {
   return {
     apikey: SUPABASE_ANON_KEY || "",
@@ -80,8 +93,11 @@ export async function authSignIn(email, password) {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error("authSignIn error:", err);
+      let err = {};
+      try {
+        err = await res.json();
+      } catch (_e) {}
+      console.error("[supabase] authSignIn error:", err);
       throw new Error(err.message || `Sign in failed (status ${res.status})`);
     }
     const data = await res.json();
@@ -90,26 +106,34 @@ export async function authSignIn(email, password) {
     }
     return data;
   } catch (e) {
-    console.error("authSignIn caught:", e);
+    console.error("[supabase] authSignIn caught:", e);
     throw e;
   }
 }
 
 export async function authSignUp(email, password) {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-    method: "POST",
-    headers: authApiHeaders(),
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Sign up failed");
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: "POST",
+      headers: authApiHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      let err = {};
+      try {
+        err = await res.json();
+      } catch (_e) {}
+      throw new Error(err.message || "Sign up failed");
+    }
+    const data = await res.json();
+    if (typeof window !== "undefined" && data.access_token) {
+      window.localStorage.setItem("bs_access_token", data.access_token);
+    }
+    return data;
+  } catch (e) {
+    console.error("[supabase] authSignUp caught:", e);
+    throw e;
   }
-  const data = await res.json();
-  if (typeof window !== "undefined" && data.access_token) {
-    window.localStorage.setItem("bs_access_token", data.access_token);
-  }
-  return data;
 }
 
 export async function authSignInWithOAuth(provider) {
@@ -120,19 +144,27 @@ export async function authSignInWithOAuth(provider) {
 }
 
 export async function callRpc(fnName, params = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `RPC call '${fnName}' failed`);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) {
+      let err = {};
+      try {
+        err = await res.json();
+      } catch (_e) {}
+      throw new Error(err.message || `RPC call '${fnName}' failed`);
+    }
+    return await res.json();
+  } catch (e) {
+    console.error(`[supabase] callRpc ${fnName} error:`, e);
+    throw e;
   }
-  return await res.json();
 }
-// ---- end of auth additions ----
 
+// ---- Headers for API calls ----
 export function authHeaders() {
   const token =
     (typeof window !== "undefined" && window.localStorage?.getItem("bs_access_token")) ||
@@ -144,6 +176,7 @@ export function authHeaders() {
   };
 }
 
+// ---- Request timeout and helpers ----
 const REQUEST_TIMEOUT_MS = 12_000;
 
 function parseFilters(search) {
@@ -177,19 +210,34 @@ function isBackendUnreachable(status) {
   );
 }
 
+// ---- Transport function used by offline sync engine ----
 async function rawRequest({ table, method = "GET", filters = [], body = null, select = null, order = null }) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    const err = new Error("Supabase not configured: missing URL or anon key");
+    console.error("[supabase] rawRequest:", err.message);
+    throw err;
+  }
+
   const search = filtersToSearch(filters);
   if (select) search.set("select", select);
   if (order) search.set("order", order);
+
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${search.toString()}`, {
+    const url = `${SUPABASE_URL}/rest/v1/${table}?${search.toString()}`;
+    console.debug(`[supabase] ${method} ${url}`);
+
+    const res = await fetch(url, {
       method,
-      headers: { ...authHeaders(), Prefer: method === "GET" ? undefined : "return=representation" },
+      headers: {
+        ...authHeaders(),
+        Prefer: method === "GET" ? undefined : "return=representation",
+      },
       body: body == null ? null : JSON.stringify(body),
       signal: controller ? controller.signal : undefined,
     });
+
     if (!res.ok) {
       let err = {};
       try {
@@ -198,6 +246,7 @@ async function rawRequest({ table, method = "GET", filters = [], body = null, se
       const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
       error.status = res.status;
       error.code = err.code;
+      console.error(`[supabase] request failed:`, error);
       throw error;
     }
     if (res.status === 204) return [];
@@ -208,14 +257,23 @@ async function rawRequest({ table, method = "GET", filters = [], body = null, se
   }
 }
 
-let transportConfigured = false;
-function ensureTransportConfigured() {
-  if (transportConfigured) return;
-  offline.syncEngine.configureTransport(rawRequest);
-  transportConfigured = true;
+// ---- Transport configuration ----
+function ensureTransportConfigured(force = false) {
+  if (transportConfigured && !force) return;
+  if (typeof offline.syncEngine.configureTransport === "function") {
+    offline.syncEngine.configureTransport(rawRequest);
+    transportConfigured = true;
+    console.debug("[supabase] transport configured with rawRequest");
+  } else {
+    console.warn("[supabase] offline.syncEngine not available yet — transport will be set later");
+  }
 }
+
+// Configure transport at module load so existing code that imports sb() works
+// without any explicit configureSupabase() call. This does not set any keys.
 ensureTransportConfigured();
 
+// ---- Query builder ----
 export function sb(table) {
   let path = `${SUPABASE_URL}/rest/v1/${table}`;
   const params = new URLSearchParams();
