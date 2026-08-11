@@ -1,8 +1,6 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
-import { SmartManager } from "../app/Shell.jsx";
 import { BrandMark } from "../components/BrandMark.jsx";
-import { AppLock, GlobalStyles } from "../components/ui.jsx";
 import { notify } from "../lib/notify.jsx";
 import { IS_CONFIGURED, sb } from "../lib/supabase.jsx";
 
@@ -139,6 +137,7 @@ export async function signDocument({ docType, docRef, signerName, content }) {
   let biometric = false;
   try {
     if (
+      typeof window !== "undefined" &&
       window.PublicKeyCredential &&
       (await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
     ) {
