@@ -10,8 +10,6 @@ import * as offline from "./offline/index.jsx";
 
 const ENV = (typeof import.meta !== "undefined" && import.meta.env) || {};
 
-// Do NOT hardcode any real keys here. Use env vars or call configureSupabase
-// from a server or runtime initializer.
 let SUPABASE_URL = ENV.VITE_SUPABASE_URL || "https://rlhngsrihahhyxnjxrxm.supabase.co";
 let SUPABASE_ANON_KEY = ENV.VITE_SUPABASE_ANON_KEY || "";
 
@@ -19,7 +17,6 @@ export function configureSupabase({ url, anonKey } = {}) {
   if (url) SUPABASE_URL = url;
   if (anonKey) SUPABASE_ANON_KEY = anonKey;
   ensureTransportConfigured();
-  // keep IS_CONFIGURED in sync
   IS_CONFIGURED = isSupabaseConfigured();
 }
 
@@ -34,17 +31,14 @@ export function isSupabaseConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
-/* Mutable module state — writers must use the setter, never `DEMO_OVERRIDE = x`,
-   because ES modules forbid assigning to an imported binding. */
 export let DEMO_OVERRIDE = false;
 export function setDemoOverride(v) {
   DEMO_OVERRIDE = v;
 }
 
-// ---- ADDED: IS_CONFIGURED as a live binding ----
 export let IS_CONFIGURED = isSupabaseConfigured();
 
-// ---- ADDED: auth functions ----
+// ---- auth functions ----
 export async function authGetUser() {
   const token =
     typeof window !== "undefined" ? window.localStorage?.getItem("bs_access_token") : null;
@@ -69,7 +63,70 @@ export async function authSignOut() {
   }
   return { success: true };
 }
-// ---- end of additions ----
+
+// ---- added: sign in, sign up, OAuth, RPC ----
+function authApiHeaders() {
+  return {
+    apikey: SUPABASE_ANON_KEY || "",
+    "Content-Type": "application/json",
+  };
+}
+
+export async function authSignIn(email, password) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: authApiHeaders(),
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Sign in failed");
+  }
+  const data = await res.json();
+  if (typeof window !== "undefined" && data.access_token) {
+    window.localStorage.setItem("bs_access_token", data.access_token);
+  }
+  return data;
+}
+
+export async function authSignUp(email, password) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+    method: "POST",
+    headers: authApiHeaders(),
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Sign up failed");
+  }
+  const data = await res.json();
+  if (typeof window !== "undefined" && data.access_token) {
+    window.localStorage.setItem("bs_access_token", data.access_token);
+  }
+  return data;
+}
+
+export async function authSignInWithOAuth(provider) {
+  if (typeof window === "undefined") return;
+  const redirectTo = encodeURIComponent(window.location.origin + "/auth/callback");
+  const url = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${redirectTo}`;
+  window.location.href = url;
+  // This redirects the browser; the function won't return.
+}
+
+export async function callRpc(fnName, params = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
+    method: "POST",
+    headers: authHeaders(), // includes the user token if logged in
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `RPC call '${fnName}' failed`);
+  }
+  return await res.json();
+}
+// ---- end of auth additions ----
 
 export function authHeaders() {
   const token =
@@ -132,9 +189,7 @@ async function rawRequest({ table, method = "GET", filters = [], body = null, se
       let err = {};
       try {
         err = await res.json();
-      } catch (_e) {
-        /* non-JSON error body */
-      }
+      } catch (_e) {}
       const error = new Error(err.message || `Supabase ${method} ${table} failed: ${res.status}`);
       error.status = res.status;
       error.code = err.code;
@@ -148,19 +203,14 @@ async function rawRequest({ table, method = "GET", filters = [], body = null, se
   }
 }
 
-/* The sync engine reaches the network only through this transport. */
 let transportConfigured = false;
 function ensureTransportConfigured() {
   if (transportConfigured) return;
   offline.syncEngine.configureTransport(rawRequest);
   transportConfigured = true;
 }
-
-// Configure transport at module load so existing code that imports sb() works
-// without any explicit configureSupabase() call. This does not set any keys.
 ensureTransportConfigured();
 
-// Minimal chainable query builder over PostgREST — mirrors previous implementation
 export function sb(table) {
   let path = `${SUPABASE_URL}/rest/v1/${table}`;
   const params = new URLSearchParams();
@@ -213,7 +263,6 @@ export function sb(table) {
     const search = new URLSearchParams(params);
     let sel = selectOverride || search.get("select") || "*";
     if (method === "GET") {
-      // if offline, serve local mirror
       if (offline.syncEngine.isOffline()) return localRead(search);
     } else if (offline.syncEngine.isOffline()) {
       return localWrite(search);
@@ -247,9 +296,7 @@ export function sb(table) {
     let err = {};
     try {
       err = await res.json();
-    } catch (_e) {
-      /* non-JSON */
-    }
+    } catch (_e) {}
 
     const embedProblem = err.code === "PGRST200" || err.code === "PGRST100";
     if (method === "GET" && embedProblem && attempt < 2 && sel.includes("(")) {
