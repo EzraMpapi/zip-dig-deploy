@@ -1,4 +1,3 @@
-import {} from "lucide-react";
 import { lineTotal } from "../lib/format.jsx";
 
 /* ══════════════ BUSINESS INTELLIGENCE DATA ══════════════ */
