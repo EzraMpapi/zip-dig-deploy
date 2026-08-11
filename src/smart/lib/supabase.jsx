@@ -73,20 +73,26 @@ function authApiHeaders() {
 }
 
 export async function authSignIn(email, password) {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: authApiHeaders(),
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Sign in failed");
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: authApiHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error("authSignIn error:", err);
+      throw new Error(err.message || `Sign in failed (status ${res.status})`);
+    }
+    const data = await res.json();
+    if (typeof window !== "undefined" && data.access_token) {
+      window.localStorage.setItem("bs_access_token", data.access_token);
+    }
+    return data;
+  } catch (e) {
+    console.error("authSignIn caught:", e);
+    throw e;
   }
-  const data = await res.json();
-  if (typeof window !== "undefined" && data.access_token) {
-    window.localStorage.setItem("bs_access_token", data.access_token);
-  }
-  return data;
 }
 
 export async function authSignUp(email, password) {
@@ -111,13 +117,12 @@ export async function authSignInWithOAuth(provider) {
   const redirectTo = encodeURIComponent(window.location.origin + "/auth/callback");
   const url = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${redirectTo}`;
   window.location.href = url;
-  // This redirects the browser; the function won't return.
 }
 
 export async function callRpc(fnName, params = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
     method: "POST",
-    headers: authHeaders(), // includes the user token if logged in
+    headers: authHeaders(),
     body: JSON.stringify(params),
   });
   if (!res.ok) {
