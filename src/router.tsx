@@ -2,10 +2,9 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-// Create singletons at module scope so router and QueryClient identities
-// remain stable across renders. This prevents provider trees from
-// unmounting/remounting which causes flicker and infinite re-renders.
-
+// Module-scoped singletons to keep provider identity stable across renders.
+// This prevents provider churn that causes the app to unmount/remount and
+// triggers repeated refetches, auth/sync restarts, and visible UI flicker.
 const queryClient = new QueryClient();
 
 const router = createRouter({
